@@ -5,6 +5,8 @@ set -o pipefail
 
 export PATH="../bin:$PATH"
 
+mkdir -p testdata/results
+
 gbpcm \
 --fixed testdata/pcfix.xyz \
 --movable testdata/pcmov.xyz \
@@ -15,7 +17,7 @@ gbpcm \
 --num_iterations 5 \
 --weights "0.1,0.1,0.1,0.1"
 
-mkdir -p testdata/results
+ls -l testdata/results
 
 gbpcm-transform \
 --pc_in testdata/pcmov.xyz \
