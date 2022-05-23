@@ -1,0 +1,32 @@
+default:
+  tags:
+    - docker
+    - linux
+    - dind
+
+stages:
+  - build-docker-image-stage
+  - build-stage
+  - test-stage
+
+build-docker-image-job:
+  image: docker
+  stage: build-docker-image-stage
+  services:
+    - docker:dind
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" gitlab-intern.ait.ac.at:5010
+  script:
+    - tag=":base"
+    - docker build --pull -f .devcontainer/Dockerfile -t "$CI_REGISTRY_IMAGE${tag}" .
+    - docker push "$CI_REGISTRY_IMAGE${tag}"
+
+# test1-job:
+#   image: $CI_REGISTRY_IMAGE:base
+#   stage: test-stage
+#   script:
+#     - cd ${ROS_WS}
+#     - source install/setup.bash
+#     - ros2 launch src/pc_sensor_calib/test/test_webots1/test_webots1_launch.py
