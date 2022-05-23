@@ -17,8 +17,6 @@ gbpcm \
 --num_iterations 5 \
 --weights "0.1,0.1,0.1,0.1"
 
-ls -l testdata/results
-
 gbpcm-transform \
 --pc_in testdata/pcmov.xyz \
 --pc_out testdata/results/pcmov_transformed.xyz \
