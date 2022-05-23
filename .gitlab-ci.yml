@@ -25,5 +25,5 @@ build-job:
   image: $CI_REGISTRY_IMAGE:dev
   stage: build-stage
   script:
-    - pwd
-    - ls -l
+    - /usr/bin/cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_C_COMPILER:FILEPATH=/usr/bin/gcc -DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/g++ -S/builds/as/general/nonrigid_tricubic_pc_matching -B/builds/as/general/nonrigid_tricubic_pc_matching/build -G Ninja
+    - /usr/bin/cmake --build /builds/as/general/nonrigid_tricubic_pc_matching/build --config Release --target all --
