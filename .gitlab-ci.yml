@@ -21,10 +21,8 @@ build-docker-image-job:
     - cd .devcontainer && docker build --pull -f Dockerfile -t "$CI_REGISTRY_IMAGE${tag}" .
     - docker push "$CI_REGISTRY_IMAGE${tag}"
 
-# test1-job:
-#   image: $CI_REGISTRY_IMAGE:base
-#   stage: test-stage
-#   script:
-#     - cd ${ROS_WS}
-#     - source install/setup.bash
-#     - ros2 launch src/pc_sensor_calib/test/test_webots1/test_webots1_launch.py
+build-job:
+  image: $CI_REGISTRY_IMAGE:base
+  stage: build-stage
+  script:
+    - pwd
