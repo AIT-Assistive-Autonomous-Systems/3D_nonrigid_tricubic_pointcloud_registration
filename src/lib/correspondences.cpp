@@ -1,6 +1,6 @@
 #include "correspondences.h"
+#include <nanoflann.hpp>
 #include <numeric>
-#include "src/lib/3rdparty/nanoflann/nanoflann.hpp"
 
 const int LEAF_SIZE{200};
 

@@ -10,9 +10,11 @@ endif ()
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(spdlog REQUIRED)
+find_package(nanoflann)
 
 set(LIB_SPDLOG spdlog::spdlog)
 set(LIB_EIGEN Eigen3::Eigen)
+set(LIB_NANOFLANN nanoflann::nanoflann)
 
 set(BIN_DIR "${CMAKE_CURRENT_LIST_DIR}/bin")	#binaries will be copied to this directory
 #message("BIN_DIR=" ${BIN_DIR})
@@ -30,10 +32,9 @@ add_library(libgbpcm STATIC
         src/lib/correspondences.cpp
         src/lib/correspondences.h
         src/lib/gbpcm_optimization.cpp
-        src/lib/gbpcm_optimization.h
-        src/lib/3rdparty/nanoflann/nanoflann.hpp)
+        src/lib/gbpcm_optimization.h)
 
-target_link_libraries(libgbpcm PUBLIC ${LIB_SPDLOG} ${LIB_EIGEN})
+target_link_libraries(libgbpcm PUBLIC ${LIB_SPDLOG} ${LIB_EIGEN} ${LIB_NANOFLANN})
 target_include_directories(libgbpcm PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src/lib)
 target_include_directories(libgbpcm PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
