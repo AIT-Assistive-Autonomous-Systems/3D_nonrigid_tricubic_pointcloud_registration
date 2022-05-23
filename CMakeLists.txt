@@ -1,6 +1,3 @@
-if (DEFINED ENV{GEO_CMAKE_GLOBAL_SETTINGS})
-    include($ENV{GEO_CMAKE_GLOBAL_SETTINGS} NO_POLICY_SCOPE) # include geo environment
-endif ()
 cmake_minimum_required(VERSION 3.10)
 
 project(tricubic_interpolation)
@@ -11,21 +8,11 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 endif ()
 
-if (DEFINED ENV{GEO_CMAKE_GLOBAL_SETTINGS})
-    # geo environment
-    find_package(external REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(spdlog REQUIRED)
 
-    set(LIB_SPDLOG external::spdlog)
-    set(LIB_EIGEN external::eigen)
-
-else ()
-    # standard environment
-    find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-    find_package(spdlog REQUIRED)
-
-    set(LIB_SPDLOG spdlog::spdlog)
-    set(LIB_EIGEN Eigen3::Eigen)
-endif ()
+set(LIB_SPDLOG spdlog::spdlog)
+set(LIB_EIGEN Eigen3::Eigen)
 
 set(BIN_DIR "${CMAKE_CURRENT_LIST_DIR}/bin")	#binaries will be copied to this directory
 #message("BIN_DIR=" ${BIN_DIR})
@@ -64,8 +51,7 @@ target_link_libraries(gbpcm-transform libgbpcm)
 target_include_directories(gbpcm-transform PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 set_target_properties(gbpcm-transform PROPERTIES DEBUG_POSTFIX _d)
 
-
-#copy final executables to bin directory
+# copy final executables to bin directory
 file(MAKE_DIRECTORY ${BIN_DIR})
 add_custom_command(TARGET gbpcm           POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:gbpcm>           ${BIN_DIR})
 add_custom_command(TARGET gbpcm-transform POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:gbpcm-transform> ${BIN_DIR})
