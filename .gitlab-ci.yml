@@ -38,3 +38,8 @@ test-job:
   stage: test-stage
   script:
     - cd test && ./test-gbpcm.sh
+  artifacts:
+    name: "$CI_COMMIT_REF_NAME"
+    paths:
+      - test/testdata/results
+    expire_in: 1 week
