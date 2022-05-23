@@ -1,0 +1,6 @@
+archived/
+bin/
+build/
+cmake-build*/
+lib/
+tests/
