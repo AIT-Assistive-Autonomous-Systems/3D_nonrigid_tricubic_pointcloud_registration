@@ -17,12 +17,13 @@ build-docker-image-job:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" gitlab-intern.ait.ac.at:5010
   script:
-    - tag=":base"
+    - tag=":dev"
     - cd .devcontainer && docker build --pull -f Dockerfile -t "$CI_REGISTRY_IMAGE${tag}" .
     - docker push "$CI_REGISTRY_IMAGE${tag}"
 
 build-job:
-  image: $CI_REGISTRY_IMAGE:base
+  image: $CI_REGISTRY_IMAGE:dev
   stage: build-stage
   script:
     - pwd
+    - ls -l
