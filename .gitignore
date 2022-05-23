@@ -3,4 +3,4 @@ bin/
 build/
 cmake-build*/
 lib/
-tests/
+test/testdata/results/
