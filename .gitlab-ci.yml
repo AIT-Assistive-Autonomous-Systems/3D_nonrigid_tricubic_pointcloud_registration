@@ -14,8 +14,6 @@ build-docker-image-job:
   stage: build-docker-image-stage
   services:
     - docker:dind
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" gitlab-intern.ait.ac.at:5010
   script:
