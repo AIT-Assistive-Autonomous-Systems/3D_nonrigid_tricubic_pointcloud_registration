@@ -163,7 +163,7 @@ void PtCloud::ImportTranslationGrids(const std::string &filepath) {
               << std::endl;
     exit(1);
   }
-  int current_fileversion{header_info.fileversion}; // save file version for check
+  int current_fileversion{header_info.fileversion};  // save file version for check
   read_value(file, header_info.fileversion);
   if (header_info.fileversion != current_fileversion) {  // check file version
     std::cerr << "File version of \"" << filepath << "\" is \"" << header_info.fileversion

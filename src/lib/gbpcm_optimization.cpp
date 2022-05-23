@@ -58,7 +58,8 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
   J.setFromTriplets(J_triplets.begin(), J_triplets.end());
 
   Eigen::VectorXd p(num_observations);
-  // Todo Use weights_zero_observations[0] to weights_zero_observations[3] for observation of f,fx,fy,fz,...
+  // Todo Use weights_zero_observations[0] to weights_zero_observations[3] for observation of
+  // f,fx,fy,fz,...
   p << Eigen::VectorXd::Ones(correspondences.num()),
       Eigen::VectorXd::Ones(num_unknowns) * weights_zero_observations[0];
   auto P{p.asDiagonal()};

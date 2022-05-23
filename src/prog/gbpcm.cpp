@@ -1,10 +1,10 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
-#include "src/prog/3rdparty/cxxopts/cxxopts.hpp"
 #include "src/lib/correspondences.h"
 #include "src/lib/gbpcm_optimization.h"
 #include "src/lib/ioutils.h"
 #include "src/lib/ptcloud.h"
+#include "src/prog/3rdparty/cxxopts/cxxopts.hpp"
 
 struct CorrespondencesResults {
   int num{};

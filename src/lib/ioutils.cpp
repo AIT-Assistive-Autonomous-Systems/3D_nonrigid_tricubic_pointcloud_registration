@@ -73,9 +73,9 @@ void SaveMatrixToFile(const Eigen::MatrixXd &A, const std::string &path) {
 }
 
 // TODO Change to "... must have exactly 6 columns: x y z nx ny nz."
-void CheckNumColsOfMatrix(const Eigen::MatrixXd& M,
-                          const int& num_cols,
-                          const std::string& matrix_name) {
+void CheckNumColsOfMatrix(const Eigen::MatrixXd &M,
+                          const int &num_cols,
+                          const std::string &matrix_name) {
   if (M.cols() != num_cols) {
     std::cout << "Point cloud \"" << matrix_name << "\" does not have exactly " << num_cols
               << " columns!" << std::endl;
