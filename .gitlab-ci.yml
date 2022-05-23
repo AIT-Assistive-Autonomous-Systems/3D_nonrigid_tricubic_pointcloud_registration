@@ -20,7 +20,7 @@ build-docker-image-job:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" gitlab-intern.ait.ac.at:5010
   script:
     - tag=":base"
-    - docker build --pull -f .devcontainer/Dockerfile -t "$CI_REGISTRY_IMAGE${tag}" .
+    - cd .devcontainer && docker build --pull -f Dockerfile -t "$CI_REGISTRY_IMAGE${tag}" .
     - docker push "$CI_REGISTRY_IMAGE${tag}"
 
 # test1-job:
