@@ -44,14 +44,14 @@ test-nordbahn-job:
       - test/test-nordbahn/results
     expire_in: 1 week
 
-test-mls-rails-job:
+test-mls-rail-job:
   image: $CI_REGISTRY_IMAGE:dev
   stage: test-stage
   script:
-    - cd test && ./test-mls-rails.sh
+    - cd test && ./test-mls-rail.sh
   artifacts:
     name: "$CI_COMMIT_REF_NAME"
     paths:
-      - test/test-mls-rails/results
+      - test/test-mls-rail/results
     expire_in: 1 week
 
