@@ -16,7 +16,8 @@
 		"vscode": {
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"ms-vscode.cpptools-extension-pack"
+				"ms-vscode.cpptools-extension-pack",
+				"foxundermoon.shell-format"
 			]
 		}
 	},
