@@ -1,0 +1,44 @@
+[
+    "placeholder.laz",
+    {
+        "type": "filters.voxelcentroidnearestneighbor",
+        "cell": "0.05"
+    },
+    {
+        "type": "filters.covariancefeatures",
+        "knn": 20,
+        "feature_set": "Linearity, Planarity"
+    },
+    {
+        "type": "filters.mongo",
+        "expression": {
+            "$or": [
+                {
+                    "Linearity": {
+                        "$gt": 0.8
+                    }
+                },
+                {
+                    "Planarity": {
+                        "$gt": 0.8
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "type": "filters.normal",
+        "knn": 20
+    },
+    {
+        "type": "filters.voxelcentroidnearestneighbor",
+        "cell": "0.20"
+    },
+    {
+        "type": "writers.las",
+        "minor_version": 4,
+        "extra_dims": "all",
+        "forward": "all",
+        "filename": "placeholder.laz"
+    }
+]
