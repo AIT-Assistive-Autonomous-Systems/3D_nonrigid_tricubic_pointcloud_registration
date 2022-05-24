@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "test-gbpcm.sh",
+            "label": "test-nordbahn.sh",
             "type": "shell",
-            "command": "./test-gbpcm.sh",
+            "command": "./test-nordbahn.sh",
             "problemMatcher": [],
             "options": {
                 "cwd": "${workspaceFolder}/test"

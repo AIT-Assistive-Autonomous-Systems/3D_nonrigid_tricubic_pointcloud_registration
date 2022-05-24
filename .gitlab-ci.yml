@@ -33,13 +33,13 @@ build-job:
       - bin
     expire_in: 1 week
 
-test-job:
+test-nordbahn-job:
   image: $CI_REGISTRY_IMAGE:dev
   stage: test-stage
   script:
-    - cd test && ./test-gbpcm.sh
+    - cd test && ./test-nordbahn.sh
   artifacts:
     name: "$CI_COMMIT_REF_NAME"
     paths:
-      - test/testdata/results
+      - test/test-nordbahn/results
     expire_in: 1 week
