@@ -51,9 +51,7 @@ jobs:
 
     - name: Install vcpkg
       run: |
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          brew install vcpkg
-        elif [[ "$OSTYPE" == "msys"* ]]; then
+        if [[ "$OSTYPE" == "msys"* ]]; then
           choco install vcpkg
         else
           git clone https://github.com/microsoft/vcpkg.git
