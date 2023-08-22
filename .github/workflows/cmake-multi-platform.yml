@@ -64,8 +64,8 @@ jobs:
     - name: pwd
       run: pwd
 
-    - name: ls
-      run: ls
+    - name: list files
+      run: ls -a
         
     - name: Install vcpkg on windows
       if: (matrix.os == 'windows-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
