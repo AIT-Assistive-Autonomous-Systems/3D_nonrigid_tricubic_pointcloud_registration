@@ -23,6 +23,7 @@ jobs:
       # 3. <Linux, Release, latest Clang compiler toolchain on the default runner image, default generator>
       #
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
+      # All include combinations are processed after exclude. This allows you to use include to add back combinations that were previously excluded.
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
@@ -39,15 +40,7 @@ jobs:
           #  cpp_compiler: clang++
         exclude:
           - os: windows-latest
-            c_compiler: cl
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
           - os: ubuntu-latest
-            c_compiler: cl
-          - os: ubuntu-latest
-            c_compiler: clang
 
     steps:
     - name: Checkout repository
