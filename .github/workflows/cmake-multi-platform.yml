@@ -58,15 +58,13 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          /vcpkg/
-        paths: test
-        key: ${{ matrix.os }}-vcpkg
-        #key: ${{ matrix.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          /opt/vcpkg/
+        key: ${{ matrix.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
         
     - name: Install vcpkg on linux
       if: (matrix.os == 'ubuntu-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
       run: |
-        cd /
+        cd /opt
         git clone https://github.com/microsoft/vcpkg.git
         /vcpkg/bootstrap-vcpkg.sh
 
@@ -79,7 +77,7 @@ jobs:
     - name: Install vcpkg on windows
       if: (matrix.os == 'windows-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
       run: |
-        cd \
+        cd \opt
         git clone https://github.com/microsoft/vcpkg.git
         \vcpkg\bootstrap-vcpkg.bat
 
@@ -102,7 +100,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake
+        -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake
         -S ${{ github.workspace }}
 
     - name: Build
