@@ -52,7 +52,7 @@ jobs:
       with:
         path: |
           /opt/vcpkg/
-        key: ${{ matrix.os }}-vcpkg-${{ hashFiles('./github/workflows/vcpkg.yml') }}
+        key: ${{ matrix.os }}-vcpkg-${{ hashFiles('./github/workflows/vcpkg.txt') }}
         
     - name: Install vcpkg on linux
       if: (matrix.os == 'ubuntu-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
