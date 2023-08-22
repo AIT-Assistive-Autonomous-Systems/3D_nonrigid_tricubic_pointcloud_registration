@@ -60,12 +60,6 @@ jobs:
         cd /opt
         git clone https://github.com/microsoft/vcpkg.git
         ./vcpkg/bootstrap-vcpkg.sh
-
-    - name: pwd
-      run: pwd
-
-    - name: list files
-      run: ls -a
         
     - name: Install vcpkg on windows
       if: (matrix.os == 'windows-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
