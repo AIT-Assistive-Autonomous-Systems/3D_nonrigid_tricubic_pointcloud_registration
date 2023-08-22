@@ -66,7 +66,7 @@ jobs:
       run: |
         cd /opt
         git clone https://github.com/microsoft/vcpkg.git
-        /vcpkg/bootstrap-vcpkg.sh
+        ./vcpkg/bootstrap-vcpkg.sh
 
     - name: pwd
       run: pwd
@@ -79,7 +79,7 @@ jobs:
       run: |
         cd \opt
         git clone https://github.com/microsoft/vcpkg.git
-        \vcpkg\bootstrap-vcpkg.bat
+        .\vcpkg\bootstrap-vcpkg.bat
 
     - name: Install vcpkg dependencies
       if: steps.cache-vcpkg.outputs.cache-hit != 'true'
