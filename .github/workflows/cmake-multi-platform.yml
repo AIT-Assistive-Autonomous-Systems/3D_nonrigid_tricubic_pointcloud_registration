@@ -85,7 +85,8 @@ jobs:
     - name: Reinstall vcpkg
       run: |
         cd /opt
-        ./vcpkg/bootstrap-vcpkg.sh
+        vcpkg list
+        vcpkg install spdlog
         vcpkg list
 
     - name: Configure CMake
