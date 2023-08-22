@@ -85,7 +85,6 @@ jobs:
     - name: Reinstall vcpkg
       run: |
         cd /opt
-        git clone https://github.com/microsoft/vcpkg.git
         ./vcpkg/bootstrap-vcpkg.sh
         vcpkg list
 
