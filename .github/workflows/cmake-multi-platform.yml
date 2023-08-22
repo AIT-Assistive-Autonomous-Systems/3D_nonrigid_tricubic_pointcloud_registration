@@ -58,7 +58,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          vcpkg/
+          /vcpkg/
         paths: test
         key: ${{ matrix.os }}-vcpkg
         #key: ${{ matrix.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
@@ -66,8 +66,9 @@ jobs:
     - name: Install vcpkg on linux
       if: (matrix.os == 'ubuntu-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
       run: |
+        cd /
         git clone https://github.com/microsoft/vcpkg.git
-        ./vcpkg/bootstrap-vcpkg.sh
+        /vcpkg/bootstrap-vcpkg.sh
 
     - name: pwd
       run: pwd
@@ -78,8 +79,9 @@ jobs:
     - name: Install vcpkg on windows
       if: (matrix.os == 'windows-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
       run: |
+        cd \
         git clone https://github.com/microsoft/vcpkg.git
-        .\vcpkg\bootstrap-vcpkg.bat
+        \vcpkg\bootstrap-vcpkg.bat
 
     - name: Install vcpkg dependencies
       if: steps.cache-vcpkg.outputs.cache-hit != 'true'
@@ -100,7 +102,8 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S ${{ github.workspace }} -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake
+        -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake
+        -S ${{ github.workspace }}
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
