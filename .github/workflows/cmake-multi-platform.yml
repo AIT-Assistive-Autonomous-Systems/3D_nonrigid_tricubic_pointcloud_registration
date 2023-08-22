@@ -58,7 +58,8 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          vcpkg
+          vcpkg/
+        paths: test
         key: ${{ matrix.os }}-vcpkg
         #key: ${{ matrix.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
         
@@ -67,6 +68,9 @@ jobs:
       run: |
         git clone https://github.com/microsoft/vcpkg.git
         ./vcpkg/bootstrap-vcpkg.sh
+
+    - name: pwd
+      run: pwd
         
     - name: Install vcpkg on windows
       if: (matrix.os == 'windows-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
