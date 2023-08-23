@@ -1,4 +1,0 @@
-eigen3
-spdlog
-nanoflann
-pdal
