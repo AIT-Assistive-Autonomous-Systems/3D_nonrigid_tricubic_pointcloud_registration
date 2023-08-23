@@ -86,6 +86,9 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: List vcpkg
+      run: echo $GITHUB_OUTPUT
+
+    - name: List vcpkg
       run: vcpkg list
 
     - name: Show vcpkg folder structure
