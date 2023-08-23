@@ -29,9 +29,9 @@ jobs:
         build_type: [Release]
         c_compiler: [gcc, clang, cl]
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
+          #- os: windows-latest
+          #  c_compiler: cl
+          #  cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -46,31 +46,29 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Cache vcpkg and its libraries
-      id: cache-vcpkg
+    - name: Cache vcpkg and its libraries for ubuntu
+      id: cache-vcpkg-ubuntu
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/cache@v3
       with:
-        path: |
-          /opt/vcpkg/
-        key: ${{ matrix.os }}-vcpkg-${{ hashFiles('./.github/workflows/vcpkg.txt') }}
-        
-    - name: Install vcpkg on linux
-      if: (matrix.os == 'ubuntu-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
-      run: |
-        cd /opt
-        git clone https://github.com/microsoft/vcpkg.git
-        ./vcpkg/bootstrap-vcpkg.sh
-        
-    - name: Install vcpkg on windows
-      if: (matrix.os == 'windows-latest') && (steps.cache-vcpkg.outputs.cache-hit != 'true')
-      run: |
-        cd \opt
-        git clone https://github.com/microsoft/vcpkg.git
-        .\vcpkg\bootstrap-vcpkg.bat
+        path: /usr/local/share/vcpkg/
+        key: ${{ matrix.os }}-vcpkg-${{ hashFiles('./.github/workflows/vcpkg_ubuntu.sh') }}
 
-    - name: Install vcpkg dependencies
-      if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-      run: vcpkg install eigen3 spdlog nanoflann pdal --x-install-root=/opt/vcpkg/installed
+    - name: Cache vcpkg and its libraries for windows
+      id: cache-vcpkg-windows
+      if: matrix.os == 'windows-latest'
+      uses: actions/cache@v3
+      with:
+        path: C:\vcpkg
+        key: ${{ matrix.os }}-vcpkg-${{ hashFiles('./.github/workflows/vcpkg_windows.sh') }}
+
+    - name: Install vcpkg dependencies on ubuntu
+      if: (matrix.os == 'ubuntu-latest') && (steps.cache-vcpkg-ubuntu.outputs.cache-hit != 'true')
+      run: ./.github/workflows/vcpkg_ubuntu.sh
+
+    - name: Install vcpkg dependencies on windows
+      if: (matrix.os == 'windows-latest') && (steps.cache-vcpkg-windows.outputs.cache-hit != 'true')
+      run: ./.github/workflows/vcpkg_ubuntu.sh
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -80,14 +78,7 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: List vcpkg
-      run: cd /opt/ && ls -R vcpkg
-
-    - name: Reinstall vcpkg
-      run: |
-        cd /opt
-        vcpkg list --x-full-desc
-        vcpkg install spdlog
-        vcpkg list --x-full-desc
+      run: vcpkg list
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -97,7 +88,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake
+        -DCMAKE_TOOLCHAIN_FILE=/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake
         -S ${{ github.workspace }}
 
     #- name: Build
