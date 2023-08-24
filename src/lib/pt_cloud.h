@@ -5,18 +5,19 @@
 #include <stdexcept>
 #include <vector>
 
-#include "translationgrid.h"
+#include "translation_grid.h"
 
-class PtCloud {
+class PtCloud
+{
  public:
   PtCloud(Eigen::MatrixXd X);
 
   void SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd nz);
-  void InitializeTranslationGrids(const double &voxel_size,
-                                  const uint32_t &buffer_voxels,
-                                  const std::vector<double> &grid_limits);
-  void ImportTranslationGrids(const std::string &filepath);
-  void ExportTranslationGrids(const std::string &filepath);
+  void InitializeTranslationGrids(const double& voxel_size,
+                                  const uint32_t& buffer_voxels,
+                                  const std::vector<double>& grid_limits);
+  void ImportTranslationGrids(const std::string& filepath);
+  void ExportTranslationGrids(const std::string& filepath);
   void UpdateXt();
   void InitMatricesForUpdateXt();
 
@@ -29,14 +30,14 @@ class PtCloud {
   double z_max();
 
   // Getters
-  const Eigen::MatrixXd &X();
-  const Eigen::MatrixXd &Xt();
-  const Eigen::VectorXd &nx();
-  const Eigen::VectorXd &ny();
-  const Eigen::VectorXd &nz();
-  TranslationGrid &x_translation_grid();
-  TranslationGrid &y_translation_grid();
-  TranslationGrid &z_translation_grid();
+  const Eigen::MatrixXd& X();
+  const Eigen::MatrixXd& Xt();
+  const Eigen::VectorXd& nx();
+  const Eigen::VectorXd& ny();
+  const Eigen::VectorXd& nz();
+  TranslationGrid& x_translation_grid();
+  TranslationGrid& y_translation_grid();
+  TranslationGrid& z_translation_grid();
 
  private:
   Eigen::MatrixXd X_;
@@ -56,7 +57,8 @@ class PtCloud {
   Eigen::Matrix<double, Eigen::Dynamic, 64> X_power_;
 };
 
-struct HeaderInfo {
+struct HeaderInfo
+{
   char identifier[10]{"gbpcm"};
   int fileversion{1};
   const int length{1000};  // bytes

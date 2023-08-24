@@ -2,11 +2,12 @@
 #include <spdlog/stopwatch.h>
 #include "src/lib/correspondences.h"
 #include "src/lib/gbpcm_optimization.h"
-#include "src/lib/ioutils.h"
-#include "src/lib/ptcloud.h"
+#include "src/lib/io_utils.h"
+#include "src/lib/pt_cloud.h"
 #include "src/prog/3rdparty/cxxopts/cxxopts.hpp"
 
-struct CorrespondencesResults {
+struct CorrespondencesResults
+{
   int num{};
   double mean_point_to_plane_dists_before_optimization{};
   double std_point_to_plane_dists_before_optimization{};
@@ -14,7 +15,8 @@ struct CorrespondencesResults {
   double std_point_to_plane_dists_after_optimization{};
 };
 
-struct IterationResults {
+struct IterationResults
+{
   int it{};
   OptimizationResults optimization_results{};
   CorrespondencesResults correspondences_results{};
@@ -24,11 +26,14 @@ cxxopts::ParseResult ParseUserInputs(int argc, char** argv);
 
 void ReportIterationResults(const IterationResults& iteration_results);
 
-int main(int argc, char** argv) {
-  try {
+int main(int argc, char** argv)
+{
+  try
+  {
     cxxopts::ParseResult result = ParseUserInputs(argc, argv);
 
-    if (result["suppress_logging"].as<bool>()) {
+    if (result["suppress_logging"].as<bool>())
+    {
       spdlog::set_level(spdlog::level::off);
     }
 
@@ -39,8 +44,6 @@ int main(int argc, char** argv) {
     spdlog::info("Create point cloud objects");
     auto X_fix = ImportFileToMatrix(std::string(result["fixed"].as<std::string>()));
     auto X_mov = ImportFileToMatrix(std::string(result["movable"].as<std::string>()));
-    CheckNumColsOfMatrix(X_fix, 6, std::string(result["fixed"].as<std::string>()));
-    CheckNumColsOfMatrix(X_mov, 6, std::string(result["movable"].as<std::string>()));
     auto pc_fix{PtCloud(X_fix.leftCols(3))};
     pc_fix.SetNormals(X_fix.col(3), X_fix.col(4), X_fix.col(5));
     auto pc_mov{PtCloud(X_mov.leftCols(3))};
@@ -82,7 +85,8 @@ int main(int argc, char** argv) {
 
     spdlog::info("Start iterative point cloud matching");
     IterationResults iteration_results{};
-    for (int it = 0; it < result["num_iterations"].as<unsigned int>(); it++) {
+    for (int it = 0; it < result["num_iterations"].as<unsigned int>(); it++)
+    {
       iteration_results.it = it + 1;
 
       correspondences.SetSelectedPoints(idx_pc_fix);
@@ -101,13 +105,16 @@ int main(int argc, char** argv) {
       iteration_results.optimization_results =
           GBPCMOptimization::Solve(correspondences, result["weights"].as<std::vector<double>>());
 
-      if (iteration_results.optimization_results.success) {
+      if (iteration_results.optimization_results.success)
+      {
         iteration_results.correspondences_results.mean_point_to_plane_dists_after_optimization =
             correspondences.point_to_plane_dists_t().mean;
         iteration_results.correspondences_results.std_point_to_plane_dists_after_optimization =
             correspondences.point_to_plane_dists_t().std;
         ReportIterationResults(iteration_results);
-      } else {
+      }
+      else
+      {
         spdlog::error("Optimization was not successful!");
         return 1;
       }
@@ -118,11 +125,14 @@ int main(int argc, char** argv) {
     pc_mov.ExportTranslationGrids(result["transform"].as<std::string>());
 
     spdlog::info("Finished \"gbpcm\" in {:.3}s!", sw);
-
-  } catch (const std::exception& e) {
+  }
+  catch (const std::exception& e)
+  {
     std::cerr << "Caught exception: " << e.what() << std::endl;
     return 1;
-  } catch (...) {
+  }
+  catch (...)
+  {
     std::cerr << "Caught unknown exception." << std::endl;
     return 1;
   }
@@ -130,7 +140,8 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-cxxopts::ParseResult ParseUserInputs(int argc, char** argv) {
+cxxopts::ParseResult ParseUserInputs(int argc, char** argv)
+{
   cxxopts::Options options("gbpcm", "Grid based point cloud matching.");
 
   // clang-format off
@@ -178,15 +189,18 @@ options.add_options()
 
   auto result = options.parse(argc, argv);
 
-  if (result.count("help")) {
+  if (result.count("help"))
+  {
     std::cout << options.help() << std::endl;
     exit(0);
   }
   return result;
 }
 
-void ReportIterationResults(const IterationResults& iteration_results) {
-  if (iteration_results.it == 1) {
+void ReportIterationResults(const IterationResults& iteration_results)
+{
+  if (iteration_results.it == 1)
+  {
     spdlog::info("{:>4} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}",
                  "it",
                  "num_corr",
