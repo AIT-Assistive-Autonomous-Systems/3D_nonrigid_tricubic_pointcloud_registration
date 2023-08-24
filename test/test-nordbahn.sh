@@ -11,16 +11,16 @@ export PATH="../../bin:$PATH"
 
 mkdir -p results
 
-# log "estimate transformation"
-# gbpcm \
-# --fixed pcfix.txt \
-# --movable pcmov.txt \
-# --transform results/pcmov.gbpcm \
-# --voxel_size 25 \
-# --grid_limits 24880,354170,110,25955,354595,235 \
-# --buffer_voxels 1 \
-# --num_iterations 5 \
-# --weights "0.1,0.1,0.1,0.1"
+log "estimate transformation"
+gbpcm \
+--fixed pcfix.las \
+--movable pcmov.las \
+--transform results/pcmov.gbpcm \
+--voxel_size 25 \
+--grid_limits 24880,354170,110,25955,354595,235 \
+--buffer_voxels 1 \
+--num_iterations 5 \
+--weights "0.1,0.1,0.1,0.1"
 
 log "apply transformation"
 gbpcm-transform \
