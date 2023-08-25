@@ -10,9 +10,9 @@
 #include <pdal/PointTable.hpp>
 #include <pdal/PointView.hpp>
 #include <pdal/StageFactory.hpp>
+#include <pdal/io/BufferReader.hpp>
 #include <pdal/io/LasReader.hpp>
 #include <pdal/io/LasWriter.hpp>
-#include <pdal/io/BufferReader.hpp>
 
 Eigen::MatrixXd ImportFileToMatrix(const std::string& path);
 

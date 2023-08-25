@@ -274,6 +274,7 @@ pdal::Options CreatePDALWriterOptions(const std::string& extension)
   }
   else if (extension == ".xyz" || extension == ".txt")
   {
+    pdal_writer_options.add("precision", "4");
   }
   else
   {
