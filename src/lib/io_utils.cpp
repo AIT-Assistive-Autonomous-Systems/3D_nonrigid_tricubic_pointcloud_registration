@@ -68,7 +68,7 @@ Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view, const bool& with_no
     {
       std::string error_string;
       error_string += "Point cloud does not have all fields for 3D matrix!\n";
-      error_string += "Fields needed: X, Y, Z\n";
+      error_string += "Fields required: X, Y, Z\n";
       error_string += PointcloudFieldsToString(view);
       throw std::runtime_error(error_string);
     }
@@ -81,7 +81,7 @@ Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view, const bool& with_no
     {
       std::string error_string;
       error_string += "Point cloud does not have all fields for 6D matrix!\n";
-      error_string += "Fields needed: X, Y, Z, NormalX, NormalY, NormalZ\n";
+      error_string += "Fields required: X, Y, Z, NormalX, NormalY, NormalZ\n";
       error_string += PointcloudFieldsToString(view);
       throw std::runtime_error(error_string);
     }
@@ -111,8 +111,8 @@ void UpdateTransformedPointcloud(const pdal::PointViewPtr view, const Eigen::Mat
       !view->hasDim(pdal::Dimension::Id::Z))
   {
     std::string error_string;
-    error_string += "Point cloud does not have all fields for 3D matrix!\n";
-    error_string += "Fields needed: X, Y, Z\n";
+    error_string += "Point cloud does not have all required fields!\n";
+    error_string += "Fields required: X, Y, Z\n";
     error_string += PointcloudFieldsToString(view);
     throw std::runtime_error(error_string);
   }
@@ -149,29 +149,9 @@ void SaveMatrixToFile(const Eigen::MatrixXd& x_updated,
   std::string extension_in = std::filesystem::path(path_in).extension().string();
   std::string extension_out = std::filesystem::path(path_out).extension().string();
 
-  // Create pdal reader type based on suffix
-  std::string pdal_reader_type, pdal_writer_type;
-  if (extension_in == ".las" || extension_in == ".laz")
-  {
-    pdal_reader_type = "readers.las";
-    pdal_writer_type = "writers.las";
-  }
-  else if (extension_in == ".ply")
-  {
-    pdal_reader_type = "readers.ply";
-    pdal_writer_type = "writers.ply";
-  }
-  else if (extension_in == ".xyz" || extension_in == ".txt")
-  {
-    pdal_reader_type = "readers.text";
-    pdal_writer_type = "writers.text";
-  }
-  else
-  {
-    std::string error_string;
-    error_string += "File format '" + extension_in + "' is not supported.\n";
-    throw std::runtime_error(error_string);
-  }
+  // Create pdal reader/writer type based on suffix
+  std::string pdal_reader_type = CreatePDALReaderType(extension_in);
+  std::string pdal_writer_type = CreatePDALWriterType(extension_out);
 
   // Check if input and output file formats are the same
   if (extension_in != extension_out)
@@ -201,7 +181,6 @@ void SaveMatrixToFile(const Eigen::MatrixXd& x_updated,
 
   // Take first view from view set (contains the point cloud data)
   pdal::PointViewPtr view = *view_set.begin();
-
   if (view->empty())
   {
     std::string error_string = "Point cloud is empty!";
@@ -212,13 +191,13 @@ void SaveMatrixToFile(const Eigen::MatrixXd& x_updated,
     std::cout << "Read in pointcloud with " << view->size() << " points." << std::endl;
   }
 
+  // Update x,y,z fields of pointcloud with transformed values
   UpdateTransformedPointcloud(view, x_updated);
 
-  std::cout << "Write pointcloud to file: " << path_out << std::endl;
-
   // PDAL Writer
+  std::cout << "Write pointcloud to file: " << path_out << std::endl;
   pdal::Stage* writer = factory.createStage(pdal_writer_type);
-  pdal::Options writer_options;
+  pdal::Options writer_options = CreatePDALWriterOptions(extension_out);
   writer_options.add("filename", path_out);
   writer->setOptions(writer_options);
 
@@ -232,4 +211,75 @@ void SaveMatrixToFile(const Eigen::MatrixXd& x_updated,
 
   // Execute the writer to write the point cloud
   writer->execute(table);
+}
+
+std::string CreatePDALReaderType(const std::string& extension)
+{
+  std::string pdal_reader_type;
+  if (extension == ".las" || extension == ".laz")
+  {
+    pdal_reader_type = "readers.las";
+  }
+  else if (extension == ".ply")
+  {
+    pdal_reader_type = "readers.ply";
+  }
+  else if (extension == ".xyz" || extension == ".txt")
+  {
+    pdal_reader_type = "readers.text";
+  }
+  else
+  {
+    std::string error_string;
+    error_string += "File format '" + extension + "' is not supported.\n";
+    throw std::runtime_error(error_string);
+  }
+  return pdal_reader_type;
+}
+
+std::string CreatePDALWriterType(const std::string& extension)
+{
+  std::string pdal_writer_type;
+  if (extension == ".las" || extension == ".laz")
+  {
+    pdal_writer_type = "writers.las";
+  }
+  else if (extension == ".ply")
+  {
+    pdal_writer_type = "writers.ply";
+  }
+  else if (extension == ".xyz" || extension == ".txt")
+  {
+    pdal_writer_type = "writers.text";
+  }
+  else
+  {
+    std::string error_string;
+    error_string += "File format '" + extension + "' is not supported.\n";
+    throw std::runtime_error(error_string);
+  }
+  return pdal_writer_type;
+}
+
+pdal::Options CreatePDALWriterOptions(const std::string& extension)
+{
+  pdal::Options pdal_writer_options;
+  if (extension == ".las" || extension == ".laz")
+  {
+    pdal_writer_options.add("forward", "all");
+    pdal_writer_options.add("extra_dims", "all");
+  }
+  else if (extension == ".ply")
+  {
+  }
+  else if (extension == ".xyz" || extension == ".txt")
+  {
+  }
+  else
+  {
+    std::string error_string;
+    error_string += "File format '" + extension + "' is not supported.\n";
+    throw std::runtime_error(error_string);
+  }
+  return pdal_writer_options;
 }

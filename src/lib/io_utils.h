@@ -26,6 +26,12 @@ void SaveMatrixToFile(const Eigen::MatrixXd& A,
                       const std::string& path_in,
                       const std::string& path_out);
 
+std::string CreatePDALReaderType(const std::string& extension);
+
+std::string CreatePDALWriterType(const std::string& extension);
+
+pdal::Options CreatePDALWriterOptions(const std::string& extension);
+
 void UpdateTransformedPointcloud(const pdal::PointViewPtr view, const Eigen::MatrixXd& x_updated);
 
 void CheckNumColsOfMatrix(const Eigen::MatrixXd& M,
