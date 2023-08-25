@@ -1,0 +1,35 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "gbpcm_transform",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/gbpcm-transform_d",
+      "args": [
+        "--pc_in",
+        "test/test-nordbahn/pcmov.txt",
+        "--pc_out",
+        "test/test-nordbahn/results/pcmov_transformed.txt",
+        "--transform",
+        "test/test-nordbahn/results/pcmov.gbpcm"
+      ],
+      "preLaunchTask": "",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+  ],
+  "inputs": []
+}
