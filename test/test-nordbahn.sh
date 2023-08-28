@@ -13,8 +13,8 @@ mkdir -p results
 
 log "estimate transformation"
 gbpcm \
---fixed pcfix.xyz \
---movable pcmov.xyz \
+--fixed pcfix.las \
+--movable pcmov.las \
 --transform results/pcmov.gbpcm \
 --voxel_size 25 \
 --grid_limits 24880,354170,110,25955,354595,235 \
@@ -24,6 +24,6 @@ gbpcm \
 
 log "apply transformation"
 gbpcm-transform \
---pc_in pcmov.xyz \
---pc_out results/pcmov_transformed.xyz \
+--pc_in pcmov.las \
+--pc_out results/pcmov_transformed.las \
 --transform results/pcmov.gbpcm

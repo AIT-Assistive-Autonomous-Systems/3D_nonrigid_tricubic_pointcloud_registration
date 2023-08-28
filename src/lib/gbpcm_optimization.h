@@ -4,13 +4,15 @@
 #include <Eigen/Sparse>
 #include "correspondences.h"
 
-struct OptimizationResults {
+struct OptimizationResults
+{
   bool success{};
   int num_observations{};
   int num_unknowns{};
 };
 
-class GBPCMOptimization {
+class GBPCMOptimization
+{
  public:
   GBPCMOptimization();
   static OptimizationResults Solve(Correspondences& correspondences,

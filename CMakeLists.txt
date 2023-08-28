@@ -11,6 +11,11 @@ endif ()
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(spdlog REQUIRED)
 find_package(nanoflann)
+find_package(PDAL 2.5.3 REQUIRED)
+
+include_directories(${PDAL_INCLUDE_DIRS})
+link_directories(${PDAL_LIBRARY_DIRS})
+add_definitions(${PDAL_DEFINITIONS})
 
 set(LIB_SPDLOG spdlog::spdlog)
 set(LIB_EIGEN Eigen3::Eigen)
@@ -23,18 +28,18 @@ find_package(Threads REQUIRED)
 
 # libgbpcm library
 add_library(libgbpcm STATIC
-        src/lib/ioutils.cpp
-        src/lib/ioutils.h
-        src/lib/ptcloud.cpp
-        src/lib/ptcloud.h
-        src/lib/translationgrid.cpp
-        src/lib/translationgrid.h
+        src/lib/io_utils.cpp
+        src/lib/io_utils.h
+        src/lib/pt_cloud.cpp
+        src/lib/pt_cloud.h
+        src/lib/translation_grid.cpp
+        src/lib/translation_grid.h
         src/lib/correspondences.cpp
         src/lib/correspondences.h
         src/lib/gbpcm_optimization.cpp
         src/lib/gbpcm_optimization.h)
 
-target_link_libraries(libgbpcm PUBLIC ${LIB_SPDLOG} ${LIB_EIGEN} ${LIB_NANOFLANN})
+target_link_libraries(libgbpcm PUBLIC ${LIB_SPDLOG} ${LIB_EIGEN} ${LIB_NANOFLANN} ${PDAL_LIBRARIES})
 target_include_directories(libgbpcm PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src/lib)
 target_include_directories(libgbpcm PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 

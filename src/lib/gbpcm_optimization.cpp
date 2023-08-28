@@ -3,7 +3,8 @@
 GBPCMOptimization::GBPCMOptimization() = default;
 
 OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
-                                             const std::vector<double>& weights_zero_observations) {
+                                             const std::vector<double>& weights_zero_observations)
+{
   OptimizationResults optimization_results{};  // returned
 
   CorrespondencesPointsWithAttributes X{correspondences.GetCorrespondences()};
@@ -74,12 +75,14 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
   Eigen::VectorXd xhat(num_unknowns);
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
   solver.compute(J.transpose() * P * J);
-  if (solver.info() != Eigen::Success) {
+  if (solver.info() != Eigen::Success)
+  {
     optimization_results.success = false;
     return optimization_results;
   }
   xhat = solver.solve(J.transpose() * P * l);
-  if (solver.info() != Eigen::Success) {
+  if (solver.info() != Eigen::Success)
+  {
     optimization_results.success = false;
     return optimization_results;
   }
@@ -100,20 +103,24 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
   return optimization_results;
 }
 
-std::vector<Eigen::Triplet<double>> GBPCMOptimization::SparseIdentity(const int& n) {
+std::vector<Eigen::Triplet<double>> GBPCMOptimization::SparseIdentity(const int& n)
+{
   std::vector<Eigen::Triplet<double>> triplets;
   triplets.reserve(n);
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
+  {
     triplets.emplace_back(i, i, 1.0);
   }
   return triplets;
 }
 
 std::vector<Eigen::Triplet<double>> GBPCMOptimization::MultiplyWithComponentsOfNormalVectors(
-    const std::vector<Eigen::Triplet<double>>& triplets_in, const Eigen::VectorXd& n_component) {
+    const std::vector<Eigen::Triplet<double>>& triplets_in, const Eigen::VectorXd& n_component)
+{
   std::vector<Eigen::Triplet<double>> triplets_out;
   triplets_out.reserve(triplets_in.size());
-  for (auto const& triplet : triplets_in) {
+  for (auto const& triplet : triplets_in)
+  {
     int row{triplet.row()};
     int col{triplet.col()};
     double val{triplet.value() * n_component(triplet.row())};
@@ -127,8 +134,10 @@ void GBPCMOptimization::AddSubblockTriplets(
     const int& first_row,
     const int& first_col,
     const std::vector<Eigen::Triplet<double>>& subblock_triplets,
-    std::vector<Eigen::Triplet<double>>& triplets) {
-  for (auto const& triplet : subblock_triplets) {
+    std::vector<Eigen::Triplet<double>>& triplets)
+{
+  for (auto const& triplet : subblock_triplets)
+  {
     int row{first_row + triplet.row()};
     int col{first_col + triplet.col()};
     double val{triplet.value()};
