@@ -13,6 +13,7 @@ class PtCloud
   PtCloud(Eigen::MatrixXd X);
 
   void SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd nz);
+  void SetCorrespondenceId(Eigen::VectorXd correspondence_id);
   void InitializeTranslationGrids(const double& voxel_size,
                                   const uint32_t& buffer_voxels,
                                   const std::vector<double>& grid_limits);
@@ -35,6 +36,7 @@ class PtCloud
   const Eigen::VectorXd& nx();
   const Eigen::VectorXd& ny();
   const Eigen::VectorXd& nz();
+  const Eigen::VectorXd& correspondence_id();
   TranslationGrid& x_translation_grid();
   TranslationGrid& y_translation_grid();
   TranslationGrid& z_translation_grid();
@@ -47,6 +49,9 @@ class PtCloud
   Eigen::VectorXd nx_;
   Eigen::VectorXd ny_;
   Eigen::VectorXd nz_;
+
+  // Correspondence id
+  Eigen::VectorXd correspondence_id_;
 
   // Translation grids
   TranslationGrid x_translation_grid_;

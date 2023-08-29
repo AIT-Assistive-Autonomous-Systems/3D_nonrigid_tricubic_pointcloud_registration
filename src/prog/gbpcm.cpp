@@ -26,6 +26,28 @@ cxxopts::ParseResult ParseUserInputs(int argc, char** argv);
 
 void ReportIterationResults(const IterationResults& iteration_results);
 
+bool ExportCorrespondences(Correspondences& correspondences, const std::string& debug_file_name)
+{
+  auto X{correspondences.GetCorrespondences()};
+
+  std::ofstream file(debug_file_name);
+  if (file.is_open())
+  {
+    for (int i = 0; i < X.pc_fix_X.rows(); i++)
+    {
+      file << X.pc_fix_X.row(i) << std::endl;
+      file << X.pc_mov_Xt.row(i) << std::endl << std::endl;
+    }
+    file.close();
+    return true;
+  }
+  else
+  {
+    spdlog::error("Unable to open file");
+    return false;
+  }
+}
+
 int main(int argc, char** argv)
 {
   try
@@ -41,13 +63,24 @@ int main(int argc, char** argv)
     spdlog::stopwatch sw;
     spdlog::info("Start of \"gbpcm\"");
 
+    auto matching_mode = result["matching_mode"].as<std::string>();
+    spdlog::info("Matching mode for correspondences is \"{}\"", matching_mode);
+
     spdlog::info("Create point cloud objects");
-    auto X_fix = ImportFileToMatrix(std::string(result["fixed"].as<std::string>()));
-    auto X_mov = ImportFileToMatrix(std::string(result["movable"].as<std::string>()));
+    auto X_fix = ImportFileToMatrix(
+        std::string(result["fixed"].as<std::string>()), true, matching_mode == "id" ? true : false);
+    auto X_mov = ImportFileToMatrix(std::string(result["movable"].as<std::string>()),
+                                    true,
+                                    matching_mode == "id" ? true : false);
     auto pc_fix{PtCloud(X_fix.leftCols(3))};
-    pc_fix.SetNormals(X_fix.col(3), X_fix.col(4), X_fix.col(5));
     auto pc_mov{PtCloud(X_mov.leftCols(3))};
+    pc_fix.SetNormals(X_fix.col(3), X_fix.col(4), X_fix.col(5));
     pc_mov.SetNormals(X_mov.col(3), X_mov.col(4), X_mov.col(5));
+    if (matching_mode == "id")
+    {
+      pc_fix.SetCorrespondenceId(X_fix.col(X_fix.cols() - 1));
+      pc_mov.SetCorrespondenceId(X_mov.col(X_mov.cols() - 1));
+    }
     spdlog::info("  Fixed point cloud has {:d} points", pc_fix.NumPts());
     spdlog::info("  Movable point cloud has {:d} points", pc_mov.NumPts());
 
@@ -83,17 +116,61 @@ int main(int argc, char** argv)
     auto idx_pc_fix{correspondences.GetSelectedPoints()};
     spdlog::info("Selected {:d} points in fixed point cloud", correspondences.num());
 
+    auto num_iterations = result["num_iterations"].as<unsigned int>();
+    if (matching_mode == "id")
+    {
+      num_iterations = 1;
+      spdlog::info("Set num_iterations to {:d} as matching mode \"{}\" was selected.",
+                   num_iterations,
+                   matching_mode.c_str());
+    }
+
+    auto debug_dir = result["debug_dir"].as<std::string>();
+    if (debug_dir != "")
+    {
+      // Add trailing slash if not present
+      if (debug_dir.back() != '/')
+      {
+        debug_dir += '/';
+      }
+      spdlog::info("Debug export of correspondences to \"{}\"", debug_dir);
+    }
+
     spdlog::info("Start iterative point cloud matching");
     IterationResults iteration_results{};
-    for (int it = 0; it < result["num_iterations"].as<unsigned int>(); it++)
+    for (int it = 0; it < num_iterations; it++)
     {
       iteration_results.it = it + 1;
 
       correspondences.SetSelectedPoints(idx_pc_fix);
-      correspondences.MatchPoints();
+      if (matching_mode == "nn")
+      {
+        correspondences.MatchPointsByNearestNeighbor();
+      }
+      else if (matching_mode == "id")
+      {
+        correspondences.MatchPointsByCorrespondenceId();
+      }
+      else
+      {
+        spdlog::error("Matching mode \"{}\" is not available!", matching_mode);
+        return 1;
+      }
       correspondences.RejectMaxEuclideanDistanceCriteria(
           result["max_euclidean_distance"].as<double>());
       correspondences.RejectStdMadCriteria();
+
+      if (debug_dir != "")
+      {
+        char it_string[100];
+        std::sprintf(it_string, "%03d", iteration_results.it);
+        auto debug_file_name = debug_dir + "correspondences_it" + std::string(it_string) + ".poly";
+        if (!ExportCorrespondences(correspondences, debug_file_name))
+        {
+          spdlog::error("Unable to export correspondences to \"{}\"", debug_file_name);
+          return 1;
+        }
+      }
 
       iteration_results.correspondences_results.num = correspondences.num();
       iteration_results.correspondences_results.mean_point_to_plane_dists_before_optimization =
@@ -145,46 +222,52 @@ cxxopts::ParseResult ParseUserInputs(int argc, char** argv)
   cxxopts::Options options("gbpcm", "Grid based point cloud matching.");
 
   // clang-format off
-options.add_options()
-  ("f,fixed",
-   "Path to fixed point cloud",
-   cxxopts::value<std::string>())
-  ("m,movable",
-   "Path to movable point cloud",
-   cxxopts::value<std::string>())
-  ("t,transform",
-   "Path to generated transform file. This file contains the estimated translation grids for "
-   "the movable point cloud. The executable \"gbpcm-transform\" can be used to transform a "
-   "point cloud with this transform file.",
-   cxxopts::value<std::string>())
-  ("v,voxel_size",
-   "Voxel size of translation grids",
-   cxxopts::value<double>()->default_value("1"))
-  ("g,grid_limits",
-   "Limits of translation grids to be defined as \"x_min,y_min,z_min,x_max,y_max,z_max\". Note "
-   "that the extent of the grids in x,y,z must be an integer multiple of the voxel size. The "
-   "grid limits are chosen automatically by passing \"0,0,0,0,0,0\".",
-   cxxopts::value<std::vector<double>>()->default_value("0,0,0,0,0,0"))
-  ("b,buffer_voxels",
-   "Number of voxels to be used as buffer around the translation grids",
-   cxxopts::value<unsigned int>()->default_value("2"))
-  ("n,num_correspondences",
-   "Number of correspondences",
-   cxxopts::value<unsigned int>()->default_value("10000"))
-  ("e,max_euclidean_distance",
-   "Maximum euclidean distance between corresponding points",
-   cxxopts::value<double>()->default_value("1"))
-  ("i,num_iterations",
-   "Number of iterations",
-   cxxopts::value<unsigned int>()->default_value("5"))
-  ("w,weights",
-   "Weights of zero observations as list for \"f,fx/fy/fz,fxy/fxz/fyz,fxyz\"",
-   cxxopts::value<std::vector<double>>()->default_value("1,1,1,1"))
-  ("s,suppress_logging",
-   "Suppress log output",
-   cxxopts::value<bool>()->default_value("false"))
-  ("h,help",
-   "Print usage");
+  options.add_options()
+    ("f,fixed",
+    "Path to fixed point cloud",
+    cxxopts::value<std::string>())
+    ("m,movable",
+    "Path to movable point cloud",
+    cxxopts::value<std::string>())
+    ("t,transform",
+    "Path to generated transform file. This file contains the estimated translation grids for "
+    "the movable point cloud. The executable \"gbpcm-transform\" can be used to transform a "
+    "point cloud with this transform file.",
+    cxxopts::value<std::string>())
+    ("v,voxel_size",
+    "Voxel size of translation grids",
+    cxxopts::value<double>()->default_value("1"))
+    ("g,grid_limits",
+    "Limits of translation grids to be defined as \"x_min,y_min,z_min,x_max,y_max,z_max\". Note "
+    "that the extent of the grids in x,y,z must be an integer multiple of the voxel size. The "
+    "grid limits are chosen automatically by passing \"0,0,0,0,0,0\".",
+    cxxopts::value<std::vector<double>>()->default_value("0,0,0,0,0,0"))
+    ("b,buffer_voxels",
+    "Number of voxels to be used as buffer around the translation grids",
+    cxxopts::value<unsigned int>()->default_value("2"))
+    ("a,matching_mode",
+    "Matching mode for correspondences. Available modes are \"nn\" (nearest neighbor) and \"id\" (correspondence_id).",
+    cxxopts::value<std::string>()->default_value("nn"))
+    ("n,num_correspondences",
+    "Number of correspondences",
+    cxxopts::value<unsigned int>()->default_value("10000"))
+    ("e,max_euclidean_distance",
+    "Maximum euclidean distance between corresponding points",
+    cxxopts::value<double>()->default_value("1"))
+    ("i,num_iterations",
+    "Number of iterations",
+    cxxopts::value<unsigned int>()->default_value("5"))
+    ("w,weights",
+    "Weights of zero observations as list for \"f,fx/fy/fz,fxy/fxz/fyz,fxyz\"",
+    cxxopts::value<std::vector<double>>()->default_value("1,1,1,1"))
+    ("d,debug_dir",
+    "Directory for debug output for correspondences.",
+    cxxopts::value<std::string>()->default_value(""))
+    ("s,suppress_logging",
+    "Suppress log output",
+    cxxopts::value<bool>()->default_value("false"))
+    ("h,help",
+    "Print usage");
   // clang-format on
 
   auto result = options.parse(argc, argv);

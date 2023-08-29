@@ -12,6 +12,11 @@ void PtCloud::SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd
   nz_ = nz;
 }
 
+void PtCloud::SetCorrespondenceId(Eigen::VectorXd correspondence_id)
+{
+  correspondence_id_ = correspondence_id;
+}
+
 long PtCloud::NumPts() { return X_.rows(); }
 
 void PtCloud::InitializeTranslationGrids(const double& voxel_size,
@@ -285,6 +290,7 @@ const Eigen::MatrixXd& PtCloud::Xt() { return Xt_; }
 const Eigen::VectorXd& PtCloud::nx() { return nx_; }
 const Eigen::VectorXd& PtCloud::ny() { return ny_; }
 const Eigen::VectorXd& PtCloud::nz() { return nz_; }
+const Eigen::VectorXd& PtCloud::correspondence_id() { return correspondence_id_; }
 
 TranslationGrid& PtCloud::x_translation_grid() { return x_translation_grid_; }
 TranslationGrid& PtCloud::y_translation_grid() { return y_translation_grid_; }

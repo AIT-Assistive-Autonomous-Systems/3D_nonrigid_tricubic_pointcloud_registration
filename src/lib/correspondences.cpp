@@ -2,6 +2,8 @@
 #include <nanoflann.hpp>
 #include <numeric>
 
+#include <iostream>
+
 const int LEAF_SIZE{200};
 
 Correspondences::Correspondences(PtCloud& pc_fix, PtCloud& pc_mov)
@@ -14,7 +16,7 @@ void Correspondences::SelectPointsByRandomSampling(const uint32_t& num_correspon
   idx_pc_fix_ = RandInt(0, (int)pc_fix_.NumPts() - 1, num_correspondences);
 }
 
-void Correspondences::MatchPoints()
+void Correspondences::MatchPointsByNearestNeighbor()
 {
   Eigen::MatrixXd pc_fix_X_sel{GetSelectedPoints_()};
 
@@ -25,6 +27,34 @@ void Correspondences::MatchPoints()
   for (int i = 0; i < idx_nn.rows(); i++)
   {
     idx_pc_mov_[i] = idx_nn(i, 0);
+  }
+
+  ComputeDists();
+}
+
+void Correspondences::MatchPointsByCorrespondenceId()
+{
+  Eigen::MatrixXd pc_fix_X_sel{GetSelectedCorrespondenceIds_()};
+
+  // std::cout << "pc_fix_X_sel " << pc_fix_X_sel.size() << std::endl << pc_fix_X_sel.topRows(10) << std::endl;
+  // std::cout << "pc_mov_.correspondence_id() " << pc_mov_.correspondence_id().size() << std::endl << pc_mov_.correspondence_id().topRows(10) << std::endl;
+
+  idx_pc_mov_ = std::vector<int>(idx_pc_fix_.size());
+
+  Eigen::MatrixXi idx_nn(idx_pc_fix_.size(), 1);
+  idx_nn = KnnSearch(pc_mov_.correspondence_id(), pc_fix_X_sel, 1);
+
+  // std::cout << "idx_nn " << idx_nn.size() << std::endl << idx_nn.topRows(10) << std::endl;
+
+  for (int i = 0; i < idx_nn.rows(); i++)
+  {
+    // Take only matches with same correspondence id
+    auto nn{idx_nn(i, 0)};
+    auto distance = abs(pc_mov_.correspondence_id()(nn) - pc_fix_X_sel(i,0));
+    if (distance == 0)
+    {
+      idx_pc_mov_[i] = idx_nn(i, 0);
+    }
   }
 
   ComputeDists();
@@ -138,6 +168,16 @@ Eigen::MatrixXd Correspondences::GetSelectedPoints_()
   return X_sel;
 }
 
+Eigen::MatrixXd Correspondences::GetSelectedCorrespondenceIds_()
+{
+  Eigen::MatrixXd X_sel(idx_pc_fix_.size(), 1);
+  for (int i = 0; i < idx_pc_fix_.size(); i++)
+  {
+    X_sel(i, 0) = pc_fix_.correspondence_id()(idx_pc_fix_[i]);
+  }
+  return X_sel;
+}
+
 void Correspondences::ComputeDists()
 {
   point_to_plane_dists_.dists = Eigen::VectorXd(idx_pc_fix_.size());
@@ -201,14 +241,15 @@ Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_que
   // Create kd tree
   typedef nanoflann::KDTreeEigenMatrixAdaptor<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>>
       kd_tree;
-  kd_tree mat_index(3, std::cref(X), LEAF_SIZE);
+  kd_tree mat_index(X.cols(), std::cref(X), LEAF_SIZE);
 
   // Iterate over all query points
   Eigen::MatrixXi mat_idx_nn(X_query.rows(), k);
   for (Eigen::Index i = 0; i < X_query.rows(); i++)
   {
     // Query point
-    std::vector<double> qp{X_query(i, 0), X_query(i, 1), X_query(i, 2)};
+    Eigen::VectorXd row = X_query.row(i);
+    std::vector<double> qp{row.data(), row.data() + row.size()};
 
     // Search for nn of query point
     std::vector<size_t> idx_nn(k);

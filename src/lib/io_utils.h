@@ -14,10 +14,14 @@
 #include <pdal/io/LasReader.hpp>
 #include <pdal/io/LasWriter.hpp>
 
-Eigen::MatrixXd ImportFileToMatrix(const std::string& path);
+Eigen::MatrixXd ImportFileToMatrix(const std::string& path,
+                                   const bool& with_normals,
+                                   const bool& with_correspondence_id);
 
 // Matrix with x,y,z or x,y,z,nx,ny,nz
-Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view, const bool& with_normals);
+Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view,
+                              const bool& with_normals,
+                              const bool& with_correspondence_id);
 
 // Return string with fields in pointcloud
 std::string PointcloudFieldsToString(const pdal::PointViewPtr view);

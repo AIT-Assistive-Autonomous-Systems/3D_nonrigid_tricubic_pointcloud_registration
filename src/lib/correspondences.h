@@ -31,7 +31,8 @@ class Correspondences
  public:
   Correspondences(PtCloud& pc_fix, PtCloud& pc_mov);
   void SelectPointsByRandomSampling(const uint32_t& num_correspondences);
-  void MatchPoints();
+  void MatchPointsByNearestNeighbor();
+  void MatchPointsByCorrespondenceId();
   void RejectMaxEuclideanDistanceCriteria(const double& max_euclidean_distance);
   void RejectStdMadCriteria();
   CorrespondencesPointsWithAttributes GetCorrespondences();
@@ -50,6 +51,7 @@ class Correspondences
 
  private:
   Eigen::MatrixXd GetSelectedPoints_();
+  Eigen::MatrixXd GetSelectedCorrespondenceIds_();
 
   PtCloud& pc_fix_;
   PtCloud& pc_mov_;

@@ -3,3 +3,4 @@ bin/
 build/
 cmake-build*/
 test/test-nordbahn/results/
+test/test-eagle/results/
