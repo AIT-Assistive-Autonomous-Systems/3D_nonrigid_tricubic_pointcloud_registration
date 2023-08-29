@@ -133,6 +133,15 @@ int main(int argc, char** argv)
       {
         debug_dir += '/';
       }
+
+      // Check if path exists
+      if (!std::filesystem::exists(debug_dir))
+      {
+        spdlog::error("Debug directory \"{}\" does not exist!", debug_dir);
+        
+        return 1;
+      }
+
       spdlog::info("Debug export of correspondences to \"{}\"", debug_dir);
     }
 
