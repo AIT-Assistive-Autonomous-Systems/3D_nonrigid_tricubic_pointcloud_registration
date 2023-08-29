@@ -2,8 +2,6 @@
 #include <nanoflann.hpp>
 #include <numeric>
 
-#include <iostream>
-
 const int LEAF_SIZE{200};
 
 Correspondences::Correspondences(PtCloud& pc_fix, PtCloud& pc_mov)
