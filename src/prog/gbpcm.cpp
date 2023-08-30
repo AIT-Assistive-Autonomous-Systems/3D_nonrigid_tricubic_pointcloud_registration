@@ -104,7 +104,8 @@ int main(int argc, char** argv)
     }
 
     auto debug_dir = result["debug_dir"].as<std::string>();
-    if (debug_dir != "")
+    auto debug_mode = (debug_dir != "");
+    if (debug_mode)
     {
       // Add trailing slash if not present
       if (debug_dir.back() != '/')
@@ -147,7 +148,7 @@ int main(int argc, char** argv)
           result["max_euclidean_distance"].as<double>());
       correspondences.RejectStdMadCriteria();
 
-      if (debug_dir != "")
+      if (debug_mode)
       {
         char it_string[100];
         std::sprintf(it_string, "%03d", iteration_results.it);
