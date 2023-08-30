@@ -11,6 +11,15 @@
             "options": {
                 "cwd": "${workspaceFolder}/test"
             }
-        }
+        },
+        {
+          "label": "test-eagle.sh",
+          "type": "shell",
+          "command": "./test-eagle.sh",
+          "problemMatcher": [],
+          "options": {
+              "cwd": "${workspaceFolder}/test"
+          }
+      }
     ]
 }

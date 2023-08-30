@@ -1,6 +1,8 @@
 #include "io_utils.h"
 
-Eigen::MatrixXd ImportFileToMatrix(const std::string& path)
+Eigen::MatrixXd ImportFileToMatrix(const std::string& path,
+                                   const bool& with_normals,
+                                   const bool& with_correspondence_id)
 {
   // Extract extension
   std::string extension = std::filesystem::path(path).extension().string();
@@ -56,38 +58,47 @@ Eigen::MatrixXd ImportFileToMatrix(const std::string& path)
   }
 
   // Return 6D eigen matrix
-  return ExtractMatrix(view, true);
+  return ExtractMatrix(view, with_normals, with_correspondence_id);
 }
 
-Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view, const bool& with_normals)
+Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view,
+                              const bool& with_normals,
+                              const bool& with_correspondence_id)
 {
-  if (!with_normals)
+  if (!view->hasDim(pdal::Dimension::Id::X) || !view->hasDim(pdal::Dimension::Id::Y) ||
+      !view->hasDim(pdal::Dimension::Id::Z))
   {
-    if (!view->hasDim(pdal::Dimension::Id::X) || !view->hasDim(pdal::Dimension::Id::Y) ||
-        !view->hasDim(pdal::Dimension::Id::Z))
-    {
-      std::string error_string;
-      error_string += "Point cloud does not have all fields for 3D matrix!\n";
-      error_string += "Fields required: X, Y, Z\n";
-      error_string += PointcloudFieldsToString(view);
-      throw std::runtime_error(error_string);
-    }
+    std::string error_string;
+    error_string += "Point cloud does not have all fields required!\n";
+    error_string += "Fields required: X, Y, Z\n";
+    error_string += PointcloudFieldsToString(view);
+    throw std::runtime_error(error_string);
   }
-  else
+
+  if (with_normals &&
+      (!view->hasDim(pdal::Dimension::Id::NormalX) || !view->hasDim(pdal::Dimension::Id::NormalY) ||
+       !view->hasDim(pdal::Dimension::Id::NormalZ)))
   {
-    if (!view->hasDim(pdal::Dimension::Id::X) || !view->hasDim(pdal::Dimension::Id::Y) ||
-        !view->hasDim(pdal::Dimension::Id::Z) || !view->hasDim(pdal::Dimension::Id::NormalX) ||
-        !view->hasDim(pdal::Dimension::Id::NormalY) || !view->hasDim(pdal::Dimension::Id::NormalZ))
-    {
-      std::string error_string;
-      error_string += "Point cloud does not have all fields for 6D matrix!\n";
-      error_string += "Fields required: X, Y, Z, NormalX, NormalY, NormalZ\n";
-      error_string += PointcloudFieldsToString(view);
-      throw std::runtime_error(error_string);
-    }
+    std::string error_string;
+    error_string += "Point cloud does not have all fields required!\n";
+    error_string += "Fields required: NormalX, NormalY, NormalZ\n";
+    error_string += PointcloudFieldsToString(view);
+    throw std::runtime_error(error_string);
+  }
+
+  // Create id for custom field "correspondence_id"
+  auto correspondence_id_dimension = view->table().layout()->findDim("CorrespondenceID");
+  if (with_correspondence_id && (correspondence_id_dimension == pdal::Dimension::Id::Unknown))
+  {
+    std::string error_string;
+    error_string += "Point cloud does not have all fields required!\n";
+    error_string += "Fields required: CorrespondenceID\n";
+    error_string += PointcloudFieldsToString(view);
+    throw std::runtime_error(error_string);
   }
 
   int matrix_cols = with_normals ? 6 : 3;
+  matrix_cols += with_correspondence_id ? 1 : 0;
   Eigen::MatrixXd x(view->size(), matrix_cols);
   for (pdal::PointId idx = 0; idx < view->size(); idx++)
   {
@@ -99,6 +110,10 @@ Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view, const bool& with_no
       x(idx, 3) = view->getFieldAs<double>(pdal::Dimension::Id::NormalX, idx);
       x(idx, 4) = view->getFieldAs<double>(pdal::Dimension::Id::NormalY, idx);
       x(idx, 5) = view->getFieldAs<double>(pdal::Dimension::Id::NormalZ, idx);
+    }
+    if (with_correspondence_id)
+    {
+      x(idx, matrix_cols - 1) = view->getFieldAs<int>(correspondence_id_dimension, idx);
     }
   }
 

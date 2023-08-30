@@ -12,6 +12,11 @@ void PtCloud::SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd
   nz_ = nz;
 }
 
+void PtCloud::SetCorrespondenceId(Eigen::VectorXd correspondence_id)
+{
+  correspondence_id_ = correspondence_id;
+}
+
 long PtCloud::NumPts() { return X_.rows(); }
 
 void PtCloud::InitializeTranslationGrids(const double& voxel_size,
@@ -272,9 +277,9 @@ void PtCloud::InitMatricesForUpdateXt()
 
 void PtCloud::UpdateXt()
 {
-  auto tx{x_translation_grid_.p(X_, X_power_, X_voxel_idx_, Xn_voxel_)};
-  auto ty{y_translation_grid_.p(X_, X_power_, X_voxel_idx_, Xn_voxel_)};
-  auto tz{z_translation_grid_.p(X_, X_power_, X_voxel_idx_, Xn_voxel_)};
+  auto tx{x_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
+  auto ty{y_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
+  auto tz{z_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
 
   Xt_ = Eigen::MatrixX3d(NumPts(), 3);
   Xt_ << X_.col(0) + tx, X_.col(1) + ty, X_.col(2) + tz;
@@ -285,6 +290,7 @@ const Eigen::MatrixXd& PtCloud::Xt() { return Xt_; }
 const Eigen::VectorXd& PtCloud::nx() { return nx_; }
 const Eigen::VectorXd& PtCloud::ny() { return ny_; }
 const Eigen::VectorXd& PtCloud::nz() { return nz_; }
+const Eigen::VectorXd& PtCloud::correspondence_id() { return correspondence_id_; }
 
 TranslationGrid& PtCloud::x_translation_grid() { return x_translation_grid_; }
 TranslationGrid& PtCloud::y_translation_grid() { return y_translation_grid_; }

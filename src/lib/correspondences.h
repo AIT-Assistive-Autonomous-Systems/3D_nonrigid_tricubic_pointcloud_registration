@@ -2,6 +2,7 @@
 #define CORRESPONDENCES_H_
 
 #include <algorithm>
+#include <fstream>
 #include <random>
 
 #include "pt_cloud.h"
@@ -31,12 +32,14 @@ class Correspondences
  public:
   Correspondences(PtCloud& pc_fix, PtCloud& pc_mov);
   void SelectPointsByRandomSampling(const uint32_t& num_correspondences);
-  void MatchPoints();
+  void MatchPointsByNearestNeighbor();
+  void MatchPointsByCorrespondenceId();
   void RejectMaxEuclideanDistanceCriteria(const double& max_euclidean_distance);
   void RejectStdMadCriteria();
   CorrespondencesPointsWithAttributes GetCorrespondences();
   void ComputeDists();
   void SetSelectedPoints(std::vector<int> idx_pc_fix);
+  void ExportCorrespondences(const std::string& debug_file_name);
 
   uint64_t num();
   // Getters
@@ -50,6 +53,7 @@ class Correspondences
 
  private:
   Eigen::MatrixXd GetSelectedPoints_();
+  Eigen::MatrixXd GetSelectedCorrespondenceIds_();
 
   PtCloud& pc_fix_;
   PtCloud& pc_mov_;

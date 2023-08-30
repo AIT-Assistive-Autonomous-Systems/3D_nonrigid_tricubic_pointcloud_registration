@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     spdlog::info("Start of \"gbpcm-transform\"");
 
     spdlog::info("Create point cloud object");
-    auto X = ImportFileToMatrix(std::string(result["pc_in"].as<std::string>()));
+    auto X = ImportFileToMatrix(std::string(result["pc_in"].as<std::string>()), false, false);
     auto pc_mov{PtCloud(X.leftCols(3))};
     spdlog::info("Point cloud has {:d} points", pc_mov.NumPts());
 

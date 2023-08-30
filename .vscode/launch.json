@@ -5,6 +5,48 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "gbpcm",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/gbpcm_d",
+      "args": [
+        "--fixed",
+        "test/test-eagle/pcfix.txt",
+        // "test/test-nordbahn/pcfix.txt",
+        "--movable",
+        "test/test-eagle/pcmov.txt",
+        // "test/test-nordbahn/pcmov.txt",
+        "--transform",
+        "test/test-eagle/results/pcmov.gbpcm",
+        "--voxel_size",
+        "0.25",
+        "--buffer_voxels",
+        "2",
+        "--matching_mode",
+        "id",
+        "--num_iterations",
+        "50",
+        "--weights",
+        "0.1,0.1,0.1,0.1",
+        "--max_euclidean_distance",
+        "10.0",
+        "--debug_dir",
+        "test/test-eagle/results/debug"
+      ],
+      "preLaunchTask": "",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
       "name": "gbpcm_transform",
       "type": "cppdbg",
       "request": "launch",
