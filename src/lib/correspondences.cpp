@@ -18,9 +18,9 @@ void Correspondences::MatchPointsByNearestNeighbor()
 {
   Eigen::MatrixXd pc_fix_X_sel{GetSelectedPoints_()};
 
-  idx_pc_mov_ = std::vector<int>(idx_pc_fix_.size());
+  idx_pc_mov_ = std::vector<int>(num());
 
-  Eigen::MatrixXi idx_nn(idx_pc_fix_.size(), 1);
+  Eigen::MatrixXi idx_nn(num(), 1);
   idx_nn = KnnSearch(pc_mov_.Xt(), pc_fix_X_sel, 1);
   for (int i = 0; i < idx_nn.rows(); i++)
   {
@@ -34,25 +34,36 @@ void Correspondences::MatchPointsByCorrespondenceId()
 {
   Eigen::MatrixXd pc_fix_X_sel{GetSelectedCorrespondenceIds_()};
 
-  // std::cout << "pc_fix_X_sel " << pc_fix_X_sel.size() << std::endl << pc_fix_X_sel.topRows(10) << std::endl;
-  // std::cout << "pc_mov_.correspondence_id() " << pc_mov_.correspondence_id().size() << std::endl << pc_mov_.correspondence_id().topRows(10) << std::endl;
+  idx_pc_mov_ = std::vector<int>(num());
 
-  idx_pc_mov_ = std::vector<int>(idx_pc_fix_.size());
-
-  Eigen::MatrixXi idx_nn(idx_pc_fix_.size(), 1);
+  Eigen::MatrixXi idx_nn(num(), 1);
   idx_nn = KnnSearch(pc_mov_.correspondence_id(), pc_fix_X_sel, 1);
 
-  // std::cout << "idx_nn " << idx_nn.size() << std::endl << idx_nn.topRows(10) << std::endl;
+  std::vector<bool> keep(num(), true);
 
   for (int i = 0; i < idx_nn.rows(); i++)
   {
     // Take only matches with same correspondence id
     auto nn{idx_nn(i, 0)};
-    auto distance = abs(pc_mov_.correspondence_id()(nn) - pc_fix_X_sel(i,0));
+    auto distance = abs(pc_mov_.correspondence_id()(nn) - pc_fix_X_sel(i, 0));
     if (distance == 0)
     {
       idx_pc_mov_[i] = idx_nn(i, 0);
     }
+    else
+    {
+      keep[i] = false;
+    }
+  }
+
+  idx_pc_fix_ = KeepSubsetOfVector(idx_pc_fix_, keep);
+  idx_pc_mov_ = KeepSubsetOfVector(idx_pc_mov_, keep);
+
+  if (num() == 0)
+  {
+    throw std::runtime_error(
+        "No correspondences found while matching points by id! Please check the correspondence "
+        "ids.");
   }
 
   ComputeDists();
