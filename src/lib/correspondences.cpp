@@ -358,3 +358,27 @@ void Correspondences::SetSelectedPoints(const std::vector<int> idx_pc_fix)
 {
   idx_pc_fix_ = idx_pc_fix;
 }
+
+void Correspondences::ExportCorrespondences(const std::string& debug_file_name)
+{
+  auto start = std::chrono::high_resolution_clock::now();
+  auto X{GetCorrespondences()};
+
+  // Write to file in batches to speed up
+  std::ofstream file(debug_file_name);
+  if (file.is_open())
+  {
+    for (int i = 0; i < X.pc_fix_X.rows(); i++)
+    {
+      file << X.pc_fix_X(i, 0) << " " << X.pc_fix_X(i, 1) << " " << X.pc_fix_X(i, 2) << std::endl;
+      file << X.pc_mov_Xt(i, 0) << " " << X.pc_mov_Xt(i, 1) << " " << X.pc_mov_Xt(i, 2) << std::endl
+           << std::endl;
+    }
+    file.close();
+  }
+  else
+  {
+    std::string error_string = "Unable to open file \"" + debug_file_name + "\".";
+    throw std::runtime_error(error_string);
+  }
+}

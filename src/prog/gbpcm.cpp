@@ -26,28 +26,6 @@ cxxopts::ParseResult ParseUserInputs(int argc, char** argv);
 
 void ReportIterationResults(const IterationResults& iteration_results);
 
-bool ExportCorrespondences(Correspondences& correspondences, const std::string& debug_file_name)
-{
-  auto X{correspondences.GetCorrespondences()};
-
-  std::ofstream file(debug_file_name);
-  if (file.is_open())
-  {
-    for (int i = 0; i < X.pc_fix_X.rows(); i++)
-    {
-      file << X.pc_fix_X.row(i) << std::endl;
-      file << X.pc_mov_Xt.row(i) << std::endl << std::endl;
-    }
-    file.close();
-    return true;
-  }
-  else
-  {
-    spdlog::error("Unable to open file");
-    return false;
-  }
-}
-
 int main(int argc, char** argv)
 {
   try
@@ -138,7 +116,7 @@ int main(int argc, char** argv)
       if (!std::filesystem::exists(debug_dir))
       {
         spdlog::error("Debug directory \"{}\" does not exist!", debug_dir);
-        
+
         return 1;
       }
 
@@ -174,11 +152,7 @@ int main(int argc, char** argv)
         char it_string[100];
         std::sprintf(it_string, "%03d", iteration_results.it);
         auto debug_file_name = debug_dir + "correspondences_it" + std::string(it_string) + ".poly";
-        if (!ExportCorrespondences(correspondences, debug_file_name))
-        {
-          spdlog::error("Unable to export correspondences to \"{}\"", debug_file_name);
-          return 1;
-        }
+        correspondences.ExportCorrespondences(debug_file_name);
       }
 
       iteration_results.correspondences_results.num = correspondences.num();

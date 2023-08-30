@@ -2,6 +2,7 @@
 #define CORRESPONDENCES_H_
 
 #include <algorithm>
+#include <fstream>
 #include <random>
 
 #include "pt_cloud.h"
@@ -38,6 +39,7 @@ class Correspondences
   CorrespondencesPointsWithAttributes GetCorrespondences();
   void ComputeDists();
   void SetSelectedPoints(std::vector<int> idx_pc_fix);
+  void ExportCorrespondences(const std::string& debug_file_name);
 
   uint64_t num();
   // Getters
