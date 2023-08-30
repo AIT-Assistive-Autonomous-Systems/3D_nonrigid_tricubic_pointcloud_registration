@@ -220,8 +220,7 @@ Eigen::VectorXd TranslationGrid::p(const Eigen::MatrixX3d& X)
 
 Eigen::VectorXd TranslationGrid::p(const Eigen::MatrixX3d& X,
                                    const Eigen::Matrix<double, Eigen::Dynamic, 64>& X_power,
-                                   const Eigen::MatrixX3i& X_voxel_idx,
-                                   const Eigen::MatrixX3d& Xn_voxel)
+                                   const Eigen::MatrixX3i& X_voxel_idx)
 {
   int64_t num_points{X.rows()};
 

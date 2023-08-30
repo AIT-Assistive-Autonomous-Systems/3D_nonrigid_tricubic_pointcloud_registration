@@ -277,9 +277,9 @@ void PtCloud::InitMatricesForUpdateXt()
 
 void PtCloud::UpdateXt()
 {
-  auto tx{x_translation_grid_.p(X_, X_power_, X_voxel_idx_, Xn_voxel_)};
-  auto ty{y_translation_grid_.p(X_, X_power_, X_voxel_idx_, Xn_voxel_)};
-  auto tz{z_translation_grid_.p(X_, X_power_, X_voxel_idx_, Xn_voxel_)};
+  auto tx{x_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
+  auto ty{y_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
+  auto tz{z_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
 
   Xt_ = Eigen::MatrixX3d(NumPts(), 3);
   Xt_ << X_.col(0) + tx, X_.col(1) + ty, X_.col(2) + tz;

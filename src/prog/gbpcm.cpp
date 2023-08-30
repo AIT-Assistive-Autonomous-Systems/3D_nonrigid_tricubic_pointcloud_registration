@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     auto idx_pc_fix{correspondences.GetSelectedPoints()};
     spdlog::info("Selected {:d} points in fixed point cloud", correspondences.num());
 
-    auto num_iterations = result["num_iterations"].as<unsigned int>();
+    auto num_iterations = result["num_iterations"].as<uint32_t>();
     if (matching_mode == "id")
     {
       num_iterations = 1;
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
 
     spdlog::info("Start iterative point cloud matching");
     IterationResults iteration_results{};
-    for (int it = 0; it < num_iterations; it++)
+    for (uint32_t it = 0; it < num_iterations; it++)
     {
       iteration_results.it = it + 1;
 

@@ -73,7 +73,7 @@ void Correspondences::RejectMaxEuclideanDistanceCriteria(const double& max_eucli
 {
   std::vector<bool> keep(num(), true);
 
-  for (int i = 0; i < num(); i++)
+  for (uint64_t i = 0; i < num(); i++)
   {
     if (euclidean_dists_t_.dists[i] > max_euclidean_distance)
     {
@@ -91,7 +91,7 @@ void Correspondences::RejectStdMadCriteria()
 {
   std::vector<bool> keep(num(), true);
 
-  for (int i = 0; i < num(); i++)
+  for (uint64_t i = 0; i < num(); i++)
   {
     if ((abs(point_to_plane_dists_t_.dists[i] - point_to_plane_dists_t_.median) >
          3 * point_to_plane_dists_t_.std_mad))
@@ -154,7 +154,7 @@ std::vector<T> KeepSubsetOfVector(const std::vector<T>& old_vector, const std::v
   size_t num_remaining = count(keep.begin(), keep.end(), true);
   std::vector<T> new_vector(num_remaining);
   int j{0};
-  for (int i = 0; i < old_vector.size(); i++)
+  for (size_t i = 0; i < old_vector.size(); i++)
   {
     if (keep[i])
     {
@@ -168,7 +168,7 @@ std::vector<T> KeepSubsetOfVector(const std::vector<T>& old_vector, const std::v
 Eigen::MatrixXd Correspondences::GetSelectedPoints_()
 {
   Eigen::MatrixXd X_sel(idx_pc_fix_.size(), 3);
-  for (int i = 0; i < idx_pc_fix_.size(); i++)
+  for (size_t i = 0; i < idx_pc_fix_.size(); i++)
   {
     X_sel(i, 0) = pc_fix_.X()(idx_pc_fix_[i], 0);
     X_sel(i, 1) = pc_fix_.X()(idx_pc_fix_[i], 1);
@@ -180,7 +180,7 @@ Eigen::MatrixXd Correspondences::GetSelectedPoints_()
 Eigen::MatrixXd Correspondences::GetSelectedCorrespondenceIds_()
 {
   Eigen::MatrixXd X_sel(idx_pc_fix_.size(), 1);
-  for (int i = 0; i < idx_pc_fix_.size(); i++)
+  for (size_t i = 0; i < idx_pc_fix_.size(); i++)
   {
     X_sel(i, 0) = pc_fix_.correspondence_id()(idx_pc_fix_[i]);
   }
@@ -286,7 +286,7 @@ std::vector<int> RandInt(const int& min_val, const int& max_val, const uint32_t&
   {
     throw std::invalid_argument("n must be >0");
   }
-  int num_ints{max_val - min_val + 1};
+  uint32_t num_ints = max_val - min_val + 1;
   std::vector<int> v(num_ints);
   std::iota(v.begin(), v.end(), 0);  // 0 1 2 3 4 ...
   for (auto& x : v)  // min_val min_val+1 min_val+2 min_val+3 min_val+4 ...
@@ -361,7 +361,6 @@ void Correspondences::SetSelectedPoints(const std::vector<int> idx_pc_fix)
 
 void Correspondences::ExportCorrespondences(const std::string& debug_file_name)
 {
-  auto start = std::chrono::high_resolution_clock::now();
   auto X{GetCorrespondences()};
 
   // Write to file in batches to speed up

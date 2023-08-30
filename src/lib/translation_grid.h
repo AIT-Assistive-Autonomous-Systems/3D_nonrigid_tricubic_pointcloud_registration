@@ -48,8 +48,7 @@ class TranslationGrid
   // for x, y, z
   Eigen::VectorXd p(const Eigen::MatrixX3d& X,
                     const Eigen::Matrix<double, Eigen::Dynamic, 64>& X_power,
-                    const Eigen::MatrixX3i& X_voxel_idx,
-                    const Eigen::MatrixX3d& Xn_voxel);
+                    const Eigen::MatrixX3i& X_voxel_idx);
   std::vector<Eigen::Triplet<double>> J(const Eigen::MatrixX3d& X);
   void UpdateAllGridValsFromVector(const Eigen::VectorXd& grid_vals_new);
   void UpdateVoxelGridVals(const int& x_voxel_idx,
