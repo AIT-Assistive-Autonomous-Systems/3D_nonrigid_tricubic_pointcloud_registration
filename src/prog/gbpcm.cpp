@@ -42,7 +42,6 @@ int main(int argc, char** argv)
     spdlog::info("Start of \"gbpcm\"");
 
     auto matching_mode = result["matching_mode"].as<std::string>();
-    spdlog::info("Matching mode for correspondences is \"{}\"", matching_mode);
 
     spdlog::info("Create point cloud objects");
     auto X_fix = ImportFileToMatrix(
@@ -116,9 +115,8 @@ int main(int argc, char** argv)
       // Check if path exists
       if (!std::filesystem::exists(debug_dir))
       {
-        spdlog::error("Debug directory \"{}\" does not exist!", debug_dir);
-
-        return 1;
+        std::string error_string = "Debug directory \"" + debug_dir + "\" does not exist!";
+        throw std::runtime_error(error_string);
       }
 
       spdlog::info("Debug export of correspondences to \"{}\"", debug_dir);
@@ -141,8 +139,8 @@ int main(int argc, char** argv)
       }
       else
       {
-        spdlog::error("Matching mode \"{}\" is not available!", matching_mode);
-        return 1;
+        std::string error_string = "Matching mode \"" + matching_mode + "\" is not available!";
+        throw std::runtime_error(error_string);
       }
       correspondences.RejectMaxEuclideanDistanceCriteria(
           result["max_euclidean_distance"].as<double>());
@@ -176,8 +174,7 @@ int main(int argc, char** argv)
       }
       else
       {
-        spdlog::error("Optimization was not successful!");
-        return 1;
+        throw std::runtime_error("Optimization was not successful!");
       }
     }
 
