@@ -91,9 +91,9 @@ Params ParseUserInputs(int argc, char** argv)
 
   // Save to params
   Params params{};
-  params.pc_in = params.pc_in;
-  params.pc_out = params.pc_out;
-  params.transform = params.transform;
+  params.pc_in = result["pc_in"].as<std::string>();
+  params.pc_out = result["pc_out"].as<std::string>();
+  params.transform = result["transform"].as<std::string>();
   params.suppress_logging = result["suppress_logging"].as<bool>();
 
   // Check parameter inputs
