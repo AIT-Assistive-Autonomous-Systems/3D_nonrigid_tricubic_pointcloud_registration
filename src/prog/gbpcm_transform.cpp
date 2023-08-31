@@ -4,30 +4,34 @@
 #include "src/lib/pt_cloud.h"
 #include "src/prog/3rdparty/cxxopts/cxxopts.hpp"
 
-cxxopts::ParseResult ParseUserInputs(int argc, char** argv);
+struct Params
+{
+  std::string pc_in;
+  std::string pc_out;
+  std::string transform;
+  bool suppress_logging;
+};
+
+Params ParseUserInputs(int argc, char** argv);
 
 int main(int argc, char** argv)
 {
   try
   {
-    cxxopts::ParseResult result = ParseUserInputs(argc, argv);
-
-    if (result["suppress_logging"].as<bool>())
-    {
-      spdlog::set_level(spdlog::level::off);
-    }
-
     spdlog::set_pattern("%v");
+
+    Params params = ParseUserInputs(argc, argv);
+
     spdlog::stopwatch sw;
     spdlog::info("Start of \"gbpcm-transform\"");
 
     spdlog::info("Create point cloud object");
-    auto X = ImportFileToMatrix(std::string(result["pc_in"].as<std::string>()), false, false);
+    auto X = ImportFileToMatrix(params.pc_in, false, false);
     auto pc_mov{PtCloud(X.leftCols(3))};
     spdlog::info("Point cloud has {:d} points", pc_mov.NumPts());
 
     spdlog::info("Import x/y/z translation grids");
-    pc_mov.ImportTranslationGrids(result["transform"].as<std::string>());
+    pc_mov.ImportTranslationGrids(params.transform);
 
     spdlog::info("Transform point cloud");
     pc_mov.InitMatricesForUpdateXt();
@@ -35,7 +39,7 @@ int main(int argc, char** argv)
     X.leftCols(3) = pc_mov.Xt();
 
     spdlog::info("Write transformed point cloud to file");
-    SaveMatrixToFile(X, result["pc_in"].as<std::string>(), result["pc_out"].as<std::string>());
+    SaveMatrixToFile(X, params.pc_in, params.pc_out);
 
     spdlog::info("Finished \"gbpcm-transform\" in {:.3}s!", sw);
   }
@@ -53,7 +57,7 @@ int main(int argc, char** argv)
   return 0;
 }
 
-cxxopts::ParseResult ParseUserInputs(int argc, char** argv)
+Params ParseUserInputs(int argc, char** argv)
 {
   cxxopts::Options options(
       "gbpcm-transform",
@@ -85,5 +89,18 @@ cxxopts::ParseResult ParseUserInputs(int argc, char** argv)
     exit(0);
   }
 
-  return result;
+  // Save to params
+  Params params{};
+  params.pc_in = params.pc_in;
+  params.pc_out = params.pc_out;
+  params.transform = params.transform;
+  params.suppress_logging = result["suppress_logging"].as<bool>();
+
+  // Check parameter inputs
+  if (result["suppress_logging"].as<bool>())
+  {
+    spdlog::set_level(spdlog::level::off);
+  }
+
+  return params;
 }
