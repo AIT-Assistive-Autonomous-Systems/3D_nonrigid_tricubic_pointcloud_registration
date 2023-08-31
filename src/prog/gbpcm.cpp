@@ -204,19 +204,19 @@ Params ParseUserInputs(int argc, char** argv)
     cxxopts::value<std::vector<double>>()->default_value("0,0,0,0,0,0"))
     ("b,buffer_voxels",
     "Number of voxels to be used as buffer around the translation grids",
-    cxxopts::value<unsigned int>()->default_value("2"))
+    cxxopts::value<uint32_t>()->default_value("2"))
     ("a,matching_mode",
     "Matching mode for correspondences. Available modes are \"nn\" (nearest neighbor) and \"id\" (correspondence_id).",
     cxxopts::value<std::string>()->default_value("nn"))
     ("n,num_correspondences",
     "Number of correspondences",
-    cxxopts::value<unsigned int>()->default_value("10000"))
+    cxxopts::value<uint32_t>()->default_value("10000"))
     ("e,max_euclidean_distance",
     "Maximum euclidean distance between corresponding points",
     cxxopts::value<double>()->default_value("1"))
     ("i,num_iterations",
     "Number of iterations",
-    cxxopts::value<unsigned int>()->default_value("5"))
+    cxxopts::value<uint32_t>()->default_value("5"))
     ("w,weights",
     "Weights of zero observations as list for \"f,fx/fy/fz,fxy/fxz/fyz,fxyz\"",
     cxxopts::value<std::vector<double>>()->default_value("1,1,1,1"))
