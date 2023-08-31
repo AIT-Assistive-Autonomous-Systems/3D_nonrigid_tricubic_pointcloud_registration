@@ -47,14 +47,10 @@ int main(int argc, char** argv)
 {
   try
   {
+    spdlog::set_pattern("%v");
+
     Params params = ParseUserInputs(argc, argv);
 
-    if (params.suppress_logging)
-    {
-      spdlog::set_level(spdlog::level::off);
-    }
-
-    spdlog::set_pattern("%v");
     spdlog::stopwatch sw;
     spdlog::info("Start of \"gbpcm\"");
 
@@ -255,6 +251,11 @@ Params ParseUserInputs(int argc, char** argv)
   params.suppress_logging = result["suppress_logging"].as<bool>();
 
   // Check parameter inputs
+  if (params.suppress_logging)
+  {
+    spdlog::set_level(spdlog::level::off);
+  }
+
   if (params.matching_mode == "id")
   {
     params.num_iterations = 1;
