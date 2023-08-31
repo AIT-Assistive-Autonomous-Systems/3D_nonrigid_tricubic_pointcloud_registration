@@ -22,7 +22,24 @@ struct IterationResults
   CorrespondencesResults correspondences_results{};
 };
 
-cxxopts::ParseResult ParseUserInputs(int argc, char** argv);
+struct Params
+{
+  std::string fixed;
+  std::string movable;
+  std::string transform;
+  double voxel_size;
+  std::vector<double> grid_limits;
+  uint32_t buffer_voxels;
+  std::string matching_mode;
+  uint32_t num_correspondences;
+  double max_euclidean_distance;
+  uint32_t num_iterations;
+  std::vector<double> weights;
+  std::string debug_dir;
+  bool suppress_logging;
+};
+
+Params ParseUserInputs(int argc, char** argv);
 
 void ReportIterationResults(const IterationResults& iteration_results);
 
@@ -30,30 +47,23 @@ int main(int argc, char** argv)
 {
   try
   {
-    cxxopts::ParseResult result = ParseUserInputs(argc, argv);
-
-    if (result["suppress_logging"].as<bool>())
-    {
-      spdlog::set_level(spdlog::level::off);
-    }
-
     spdlog::set_pattern("%v");
+
+    Params params = ParseUserInputs(argc, argv);
+
     spdlog::stopwatch sw;
     spdlog::info("Start of \"gbpcm\"");
 
-    auto matching_mode = result["matching_mode"].as<std::string>();
-
     spdlog::info("Create point cloud objects");
-    auto X_fix = ImportFileToMatrix(
-        std::string(result["fixed"].as<std::string>()), true, matching_mode == "id" ? true : false);
-    auto X_mov = ImportFileToMatrix(std::string(result["movable"].as<std::string>()),
-                                    true,
-                                    matching_mode == "id" ? true : false);
+    auto X_fix =
+        ImportFileToMatrix(params.fixed, true, params.matching_mode == "id" ? true : false);
+    auto X_mov =
+        ImportFileToMatrix(params.movable, true, params.matching_mode == "id" ? true : false);
     auto pc_fix{PtCloud(X_fix.leftCols(3))};
     auto pc_mov{PtCloud(X_mov.leftCols(3))};
     pc_fix.SetNormals(X_fix.col(3), X_fix.col(4), X_fix.col(5));
     pc_mov.SetNormals(X_mov.col(3), X_mov.col(4), X_mov.col(5));
-    if (matching_mode == "id")
+    if (params.matching_mode == "id")
     {
       pc_fix.SetCorrespondenceId(X_fix.col(X_fix.cols() - 1));
       pc_mov.SetCorrespondenceId(X_mov.col(X_mov.cols() - 1));
@@ -62,9 +72,7 @@ int main(int argc, char** argv)
     spdlog::info("  Movable point cloud has {:d} points", pc_mov.NumPts());
 
     spdlog::info("Initialize x/y/z translation grids for movable point cloud");
-    pc_mov.InitializeTranslationGrids(result["voxel_size"].as<double>(),
-                                      result["buffer_voxels"].as<unsigned int>(),
-                                      result["grid_limits"].as<std::vector<double>>());
+    pc_mov.InitializeTranslationGrids(params.voxel_size, params.buffer_voxels, params.grid_limits);
     pc_mov.InitMatricesForUpdateXt();
     spdlog::info("Each translation grid (including buffer voxels) has the properties:");
     spdlog::info(
@@ -89,68 +97,36 @@ int main(int argc, char** argv)
 
     spdlog::info("Selection of correspondences in fixed point cloud");
     Correspondences correspondences{pc_fix, pc_mov};
-    correspondences.SelectPointsByRandomSampling(result["num_correspondences"].as<unsigned int>());
+    correspondences.SelectPointsByRandomSampling(params.num_correspondences);
     auto idx_pc_fix{correspondences.GetSelectedPoints()};
     spdlog::info("Selected {:d} points in fixed point cloud", correspondences.num());
 
-    auto num_iterations = result["num_iterations"].as<uint32_t>();
-    if (matching_mode == "id")
-    {
-      num_iterations = 1;
-      spdlog::info("Set num_iterations to {:d} as matching mode \"{}\" was selected.",
-                   num_iterations,
-                   matching_mode.c_str());
-    }
-
-    auto debug_dir = result["debug_dir"].as<std::string>();
-    auto debug_mode = (debug_dir != "");
-    if (debug_mode)
-    {
-      // Add trailing slash if not present
-      if (debug_dir.back() != '/')
-      {
-        debug_dir += '/';
-      }
-
-      // Check if path exists
-      if (!std::filesystem::exists(debug_dir))
-      {
-        std::string error_string = "Debug directory \"" + debug_dir + "\" does not exist!";
-        throw std::runtime_error(error_string);
-      }
-
-      spdlog::info("Debug export of correspondences to \"{}\"", debug_dir);
-    }
+    auto debug_mode = (params.debug_dir != "");
 
     spdlog::info("Start iterative point cloud matching");
     IterationResults iteration_results{};
-    for (uint32_t it = 0; it < num_iterations; it++)
+    for (uint32_t it = 0; it < params.num_iterations; it++)
     {
       iteration_results.it = it + 1;
 
       correspondences.SetSelectedPoints(idx_pc_fix);
-      if (matching_mode == "nn")
+      if (params.matching_mode == "nn")
       {
         correspondences.MatchPointsByNearestNeighbor();
       }
-      else if (matching_mode == "id")
+      else if (params.matching_mode == "id")
       {
         correspondences.MatchPointsByCorrespondenceId();
       }
-      else
-      {
-        std::string error_string = "Matching mode \"" + matching_mode + "\" is not available!";
-        throw std::runtime_error(error_string);
-      }
-      correspondences.RejectMaxEuclideanDistanceCriteria(
-          result["max_euclidean_distance"].as<double>());
+      correspondences.RejectMaxEuclideanDistanceCriteria(params.max_euclidean_distance);
       correspondences.RejectStdMadCriteria();
 
       if (debug_mode)
       {
         char it_string[100];
         std::sprintf(it_string, "%03d", iteration_results.it);
-        auto debug_file_name = debug_dir + "correspondences_it" + std::string(it_string) + ".poly";
+        auto debug_file_name =
+            params.debug_dir + "correspondences_it" + std::string(it_string) + ".poly";
         correspondences.ExportCorrespondences(debug_file_name);
       }
 
@@ -162,7 +138,7 @@ int main(int argc, char** argv)
 
       GBPCMOptimization optimization{};
       iteration_results.optimization_results =
-          GBPCMOptimization::Solve(correspondences, result["weights"].as<std::vector<double>>());
+          GBPCMOptimization::Solve(correspondences, params.weights);
 
       if (iteration_results.optimization_results.success)
       {
@@ -178,9 +154,8 @@ int main(int argc, char** argv)
       }
     }
 
-    spdlog::info("Export of estimated translation grids to \"{}\"",
-                 result["transform"].as<std::string>());
-    pc_mov.ExportTranslationGrids(result["transform"].as<std::string>());
+    spdlog::info("Export of estimated translation grids to \"{}\"", params.transform);
+    pc_mov.ExportTranslationGrids(params.transform);
 
     spdlog::info("Finished \"gbpcm\" in {:.3}s!", sw);
   }
@@ -198,7 +173,7 @@ int main(int argc, char** argv)
   return 0;
 }
 
-cxxopts::ParseResult ParseUserInputs(int argc, char** argv)
+Params ParseUserInputs(int argc, char** argv)
 {
   cxxopts::Options options("gbpcm", "Grid based point cloud matching.");
 
@@ -225,19 +200,19 @@ cxxopts::ParseResult ParseUserInputs(int argc, char** argv)
     cxxopts::value<std::vector<double>>()->default_value("0,0,0,0,0,0"))
     ("b,buffer_voxels",
     "Number of voxels to be used as buffer around the translation grids",
-    cxxopts::value<unsigned int>()->default_value("2"))
+    cxxopts::value<uint32_t>()->default_value("2"))
     ("a,matching_mode",
     "Matching mode for correspondences. Available modes are \"nn\" (nearest neighbor) and \"id\" (correspondence_id).",
     cxxopts::value<std::string>()->default_value("nn"))
     ("n,num_correspondences",
     "Number of correspondences",
-    cxxopts::value<unsigned int>()->default_value("10000"))
+    cxxopts::value<uint32_t>()->default_value("10000"))
     ("e,max_euclidean_distance",
     "Maximum euclidean distance between corresponding points",
     cxxopts::value<double>()->default_value("1"))
     ("i,num_iterations",
     "Number of iterations",
-    cxxopts::value<unsigned int>()->default_value("5"))
+    cxxopts::value<uint32_t>()->default_value("5"))
     ("w,weights",
     "Weights of zero observations as list for \"f,fx/fy/fz,fxy/fxz/fyz,fxyz\"",
     cxxopts::value<std::vector<double>>()->default_value("1,1,1,1"))
@@ -258,7 +233,60 @@ cxxopts::ParseResult ParseUserInputs(int argc, char** argv)
     std::cout << options.help() << std::endl;
     exit(0);
   }
-  return result;
+
+  // Save to params
+  Params params{};
+  params.fixed = result["fixed"].as<std::string>();
+  params.movable = result["movable"].as<std::string>();
+  params.transform = result["transform"].as<std::string>();
+  params.voxel_size = result["voxel_size"].as<double>();
+  params.grid_limits = result["grid_limits"].as<std::vector<double>>();
+  params.buffer_voxels = result["buffer_voxels"].as<uint32_t>();
+  params.matching_mode = result["matching_mode"].as<std::string>();
+  params.num_correspondences = result["num_correspondences"].as<uint32_t>();
+  params.max_euclidean_distance = result["max_euclidean_distance"].as<double>();
+  params.num_iterations = result["num_iterations"].as<uint32_t>();
+  params.weights = result["weights"].as<std::vector<double>>();
+  params.debug_dir = result["debug_dir"].as<std::string>();
+  params.suppress_logging = result["suppress_logging"].as<bool>();
+
+  // Check parameter inputs
+  if (params.suppress_logging)
+  {
+    spdlog::set_level(spdlog::level::off);
+  }
+
+  if (params.matching_mode == "id")
+  {
+    params.num_iterations = 1;
+    spdlog::info("Set num_iterations to {:d} as matching mode \"{}\" was selected.",
+                 params.num_iterations,
+                 params.matching_mode.c_str());
+  }
+
+  if (params.matching_mode != "nn" && params.matching_mode != "id")
+  {
+    std::string error_string = "Matching mode \"" + params.matching_mode + "\" is not available!";
+    throw std::runtime_error(error_string);
+  }
+
+  if (params.debug_dir != "")
+  {
+    // Add trailing slash if not present
+    if (params.debug_dir.back() != '/')
+    {
+      params.debug_dir += '/';
+    }
+
+    // Check if path exists
+    if (!std::filesystem::exists(params.debug_dir))
+    {
+      std::string error_string = "Debug directory \"" + params.debug_dir + "\" does not exist!";
+      throw std::runtime_error(error_string);
+    }
+  }
+
+  return params;
 }
 
 void ReportIterationResults(const IterationResults& iteration_results)
