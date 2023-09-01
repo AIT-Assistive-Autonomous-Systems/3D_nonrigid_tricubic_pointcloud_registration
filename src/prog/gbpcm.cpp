@@ -3,6 +3,7 @@
 #include "src/lib/correspondences.h"
 #include "src/lib/gbpcm_optimization.h"
 #include "src/lib/io_utils.h"
+#include "src/lib/named_column_matrix.h"
 #include "src/lib/pt_cloud.h"
 #include "src/prog/3rdparty/cxxopts/cxxopts.hpp"
 
@@ -59,14 +60,20 @@ int main(int argc, char** argv)
         ImportFileToMatrix(params.fixed, true, params.matching_mode == "id" ? true : false);
     auto X_mov =
         ImportFileToMatrix(params.movable, true, params.matching_mode == "id" ? true : false);
-    auto pc_fix{PtCloud(X_fix.leftCols(3))};
-    auto pc_mov{PtCloud(X_mov.leftCols(3))};
-    pc_fix.SetNormals(X_fix.col(3), X_fix.col(4), X_fix.col(5));
-    pc_mov.SetNormals(X_mov.col(3), X_mov.col(4), X_mov.col(5));
+
+    auto pc_fix{PtCloud(
+        X_fix(Eigen::all,
+              {X_fix.namedColIndex("x"), X_fix.namedColIndex("y"), X_fix.namedColIndex("z")}))};
+    auto pc_mov{PtCloud(
+        X_mov(Eigen::all,
+              {X_fix.namedColIndex("x"), X_fix.namedColIndex("y"), X_fix.namedColIndex("z")}))};
+
+    pc_fix.SetNormals(X_fix.namedCol("nx"), X_fix.namedCol("ny"), X_fix.namedCol("nz"));
+    pc_mov.SetNormals(X_mov.namedCol("nx"), X_mov.namedCol("ny"), X_mov.namedCol("nz"));
     if (params.matching_mode == "id")
     {
-      pc_fix.SetCorrespondenceId(X_fix.col(X_fix.cols() - 1));
-      pc_mov.SetCorrespondenceId(X_mov.col(X_mov.cols() - 1));
+      pc_fix.SetCorrespondenceId(X_fix.namedCol("correspondence_id"));
+      pc_mov.SetCorrespondenceId(X_mov.namedCol("correspondence_id"));
     }
     spdlog::info("  Fixed point cloud has {:d} points", pc_fix.NumPts());
     spdlog::info("  Movable point cloud has {:d} points", pc_mov.NumPts());

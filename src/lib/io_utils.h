@@ -13,21 +13,22 @@
 #include <pdal/io/BufferReader.hpp>
 #include <pdal/io/LasReader.hpp>
 #include <pdal/io/LasWriter.hpp>
+#include "src/lib/named_column_matrix.h"
 
-Eigen::MatrixXd ImportFileToMatrix(const std::string& path,
-                                   const bool& with_normals,
-                                   const bool& with_correspondence_id);
+NamedColumnMatrix<Eigen::MatrixXd> ImportFileToMatrix(const std::string& path,
+                                                      const bool& with_normals,
+                                                      const bool& with_correspondence_id);
 
 // Matrix with x,y,z or x,y,z,nx,ny,nz
-Eigen::MatrixXd ExtractMatrix(const pdal::PointViewPtr view,
-                              const bool& with_normals,
-                              const bool& with_correspondence_id);
+NamedColumnMatrix<Eigen::MatrixXd> ExtractMatrix(const pdal::PointViewPtr view,
+                                                 const bool& with_normals,
+                                                 const bool& with_correspondence_id);
 
 // Return string with fields in pointcloud
 std::string PointcloudFieldsToString(const pdal::PointViewPtr view);
 
 // Save pointcloud to file
-void SaveMatrixToFile(const Eigen::MatrixXd& A,
+void SaveMatrixToFile(const NamedColumnMatrix<Eigen::MatrixXd>& A,
                       const std::string& path_in,
                       const std::string& path_out);
 
@@ -41,6 +42,7 @@ std::string CreatePDALWriterType(const std::string& extension);
 pdal::Options CreatePDALWriterOptions(const std::string& extension);
 
 // Overwrite the transformed x,y,z coordinates to the original pointcloud
-void UpdateTransformedPointcloud(const pdal::PointViewPtr view, const Eigen::MatrixXd& x_updated);
+void UpdateTransformedPointcloud(const pdal::PointViewPtr view,
+                                 const NamedColumnMatrix<Eigen::MatrixXd>& x_updated);
 
 #endif  // IO_UTILS_H
