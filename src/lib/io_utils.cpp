@@ -115,20 +115,36 @@ NamedColumnMatrix<Eigen::MatrixXd> ExtractMatrix(const pdal::PointViewPtr view,
   }
   NamedColumnMatrix<Eigen::MatrixXd> x(Eigen::MatrixXd(view->size(), matrix_cols), col_names);
 
+  // Get named column indices once
+  Eigen::Index x_col, y_col, z_col, nx_col, ny_col, nz_col, correspondence_id_col;
+  x_col = x.namedColIndex("x");
+  y_col = x.namedColIndex("y");
+  z_col = x.namedColIndex("z");
+  if (with_normals)
+  {
+    nx_col = x.namedColIndex("nx");
+    ny_col = x.namedColIndex("ny");
+    nz_col = x.namedColIndex("nz");
+  }
+  if (with_correspondence_id)
+  {
+    correspondence_id_col = x.namedColIndex("correspondence_id");
+  }
+
   for (pdal::PointId idx = 0; idx < view->size(); idx++)
   {
-    x.namedColElem(idx, "x") = view->getFieldAs<double>(pdal::Dimension::Id::X, idx);
-    x.namedColElem(idx, "y") = view->getFieldAs<double>(pdal::Dimension::Id::Y, idx);
-    x.namedColElem(idx, "z") = view->getFieldAs<double>(pdal::Dimension::Id::Z, idx);
+    x(idx, x_col) = view->getFieldAs<double>(pdal::Dimension::Id::X, idx);
+    x(idx, y_col) = view->getFieldAs<double>(pdal::Dimension::Id::Y, idx);
+    x(idx, z_col) = view->getFieldAs<double>(pdal::Dimension::Id::Z, idx);
     if (with_normals)
     {
-      x.namedColElem(idx, "nx") = view->getFieldAs<double>(pdal::Dimension::Id::NormalX, idx);
-      x.namedColElem(idx, "ny") = view->getFieldAs<double>(pdal::Dimension::Id::NormalY, idx);
-      x.namedColElem(idx, "nz") = view->getFieldAs<double>(pdal::Dimension::Id::NormalZ, idx);
+      x(idx, nx_col) = view->getFieldAs<double>(pdal::Dimension::Id::NormalX, idx);
+      x(idx, ny_col) = view->getFieldAs<double>(pdal::Dimension::Id::NormalY, idx);
+      x(idx, nz_col) = view->getFieldAs<double>(pdal::Dimension::Id::NormalZ, idx);
     }
     if (with_correspondence_id)
     {
-      x.namedColElem(idx, "correspondence_id") = view->getFieldAs<int>(correspondence_id_dimension, idx);
+      x(idx, correspondence_id_col) = view->getFieldAs<int>(correspondence_id_dimension, idx);
     }
   }
 
@@ -148,11 +164,16 @@ void UpdateTransformedPointcloud(const pdal::PointViewPtr view,
     throw std::runtime_error(error_string);
   }
 
+  // Get named column indices once
+  Eigen::Index x_col, y_col, z_col;
+  x_col = x_updated.namedColIndex("x");
+  y_col = x_updated.namedColIndex("y");
+  z_col = x_updated.namedColIndex("z");
   for (pdal::PointId idx = 0; idx < view->size(); idx++)
   {
-    view->setField(pdal::Dimension::Id::X, idx, x_updated.namedColElem(idx, "x"));
-    view->setField(pdal::Dimension::Id::Y, idx, x_updated.namedColElem(idx, "y"));
-    view->setField(pdal::Dimension::Id::Z, idx, x_updated.namedColElem(idx, "z"));
+    view->setField(pdal::Dimension::Id::X, idx, x_updated(idx, x_col));
+    view->setField(pdal::Dimension::Id::Y, idx, x_updated(idx, y_col));
+    view->setField(pdal::Dimension::Id::Z, idx, x_updated(idx, z_col));
   }
 }
 
