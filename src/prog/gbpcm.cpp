@@ -1,11 +1,11 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
+#include <cxxopts.hpp>
 #include "src/lib/correspondences.h"
 #include "src/lib/gbpcm_optimization.h"
 #include "src/lib/io_utils.h"
 #include "src/lib/named_column_matrix.h"
 #include "src/lib/pt_cloud.h"
-#include "src/prog/3rdparty/cxxopts/cxxopts.hpp"
 
 struct CorrespondencesResults
 {

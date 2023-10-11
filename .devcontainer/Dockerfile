@@ -23,4 +23,5 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     libeigen3-dev \
     libspdlog-dev \
     libnanoflann-dev \
-    libpdal-dev
+    libpdal-dev \
+    libcxxopts-dev

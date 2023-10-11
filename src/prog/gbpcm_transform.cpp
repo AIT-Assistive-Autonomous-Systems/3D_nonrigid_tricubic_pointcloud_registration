@@ -1,8 +1,8 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
+#include <cxxopts.hpp>
 #include "src/lib/io_utils.h"
 #include "src/lib/pt_cloud.h"
-#include "src/prog/3rdparty/cxxopts/cxxopts.hpp"
 
 struct Params
 {
