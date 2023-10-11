@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "17-add-ci-for-linux" ]
   pull_request:
     branches: [ "main" ]
 
