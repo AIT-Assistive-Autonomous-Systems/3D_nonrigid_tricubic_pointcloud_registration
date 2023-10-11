@@ -27,7 +27,8 @@ int main(int argc, char** argv)
 
     spdlog::info("Create point cloud object");
     auto X = ImportFileToMatrix(params.pc_in, false, false);
-    auto pc_mov{PtCloud(X.leftCols(3))};
+    auto pc_mov{
+        PtCloud(X(Eigen::all, {X.namedColIndex("x"), X.namedColIndex("y"), X.namedColIndex("z")}))};
     spdlog::info("Point cloud has {:d} points", pc_mov.NumPts());
 
     spdlog::info("Import x/y/z translation grids");
@@ -36,7 +37,7 @@ int main(int argc, char** argv)
     spdlog::info("Transform point cloud");
     pc_mov.InitMatricesForUpdateXt();
     pc_mov.UpdateXt();
-    X.leftCols(3) = pc_mov.Xt();
+    X(Eigen::all, {X.namedColIndex("x"), X.namedColIndex("y"), X.namedColIndex("z")}) = pc_mov.Xt();
 
     spdlog::info("Write transformed point cloud to file");
     SaveMatrixToFile(X, params.pc_in, params.pc_out);

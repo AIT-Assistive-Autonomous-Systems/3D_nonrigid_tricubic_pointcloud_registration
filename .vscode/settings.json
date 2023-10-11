@@ -69,7 +69,8 @@
     "stop_token": "cpp",
     "thread": "cpp",
     "cinttypes": "cpp",
-    "codecvt": "cpp"
+    "codecvt": "cpp",
+    "core": "cpp"
   },
   "cmake.debugConfig": {
 

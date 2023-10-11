@@ -3,7 +3,7 @@
 
 #include "pt_cloud.h"
 
-PtCloud::PtCloud(Eigen::MatrixXd X) : X_{std::move(X)} {}
+PtCloud::PtCloud(Eigen::MatrixXd X) : X_{X} {}
 
 void PtCloud::SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd nz)
 {
