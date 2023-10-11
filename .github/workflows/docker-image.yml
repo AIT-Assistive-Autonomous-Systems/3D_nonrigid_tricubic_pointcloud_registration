@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag 3D-nonrigid-tricubic-pointcloud-registration:$(date +%s)
+      run: docker build . --file Dockerfile --tag 3d-nonrigid-tricubic-pointcloud-registration:$(date +%s)
