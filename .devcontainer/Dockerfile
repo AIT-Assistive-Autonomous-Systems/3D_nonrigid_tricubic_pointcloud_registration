@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/cpp:1-debian-11
+FROM mcr.microsoft.com/devcontainers/cpp:1-ubuntu-22.04
 
 ARG REINSTALL_CMAKE_VERSION_FROM_SOURCE="none"
 
@@ -10,13 +10,17 @@ RUN if [ "${REINSTALL_CMAKE_VERSION_FROM_SOURCE}" != "none" ]; then \
     fi \
     && rm -f /tmp/reinstall-cmake.sh
 
+# [Optional] Uncomment this section to install additional vcpkg ports.
+# RUN su vscode -c "${VCPKG_ROOT}/vcpkg install <your-port-name-here>"
+
 # [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
     libtool \
     autoconf \
     automake \
-    git-lfs
-
-# [Optional] Uncomment this section to install additional vcpkg ports.
-RUN su vscode -c "${VCPKG_ROOT}/vcpkg update && ${VCPKG_ROOT}/vcpkg install eigen3 spdlog nanoflann pdal"
+    git-lfs \
+    libeigen3-dev \
+    libspdlog-dev \
+    libnanoflann-dev \
+    libpdal-dev
