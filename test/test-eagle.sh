@@ -9,7 +9,7 @@ cd test-eagle
 
 export PATH="../../bin:$PATH"
 
-mkdir -p results
+mkdir -p results/debug
 
 log "estimate transformation"
 gbpcm \
