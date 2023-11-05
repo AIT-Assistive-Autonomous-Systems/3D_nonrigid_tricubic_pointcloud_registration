@@ -25,4 +25,7 @@ A prototype implementation of this algorithm for 2D point clouds written in Matl
 
 ## Development
 
-A predefined development environment for [VSCode](https://code.visualstudio.com) is provided [here](.devcontainer/). To use this environment, simply open this repository in VSCode and open the devcontainer with the command ``Dev Containers: Reopen in Container``. This will automatically build the development environment and open it in a new VSCode window. In the container the command ``CMake: Build`` can be used to build all targets.
+A predefined development environment for [VSCode](https://code.visualstudio.com) is provided [here](.devcontainer/). To use this environment, simply open this repository in VSCode and:
+1. Open the devcontainer with the command ``Dev Containers: Reopen in Container``. This will automatically build the development environment and open it. Then run in the container:
+	1. The command ``CMake: Build`` to build all targets.
+	2. The command ``Tasks: Run task`` to run the tests.
