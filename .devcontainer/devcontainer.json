@@ -1,38 +1,42 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/cpp
 {
-	"name": "3D_nonrigid_tricubic_pointcloud_registration",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-  "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
-
+  "name": "3D_nonrigid_tricubic_pointcloud_registration",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined"
+  ],
   "customizations": {
-		// Configure properties specific to VS Code.
-		"vscode": {
-			// Add the IDs of extensions you want installed when the container is created.
-			"extensions": [
-				"ms-vscode.cpptools-extension-pack",
-				"foxundermoon.shell-format",
-				"GitHub.copilot",
-				"GitHub.copilot-chat",
-				"GitHub.vscode-pull-request-github",
-			]
-		}
-	},
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "gcc -v",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	"remoteUser": "vscode"
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack",
+        "foxundermoon.shell-format",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "GitHub.vscode-pull-request-github",
+        "ms-python.debugpy",
+        "ms-python.black-formatter"
+      ]
+    }
+  },
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "gcc -v",
+  // Configure tool-specific properties.
+  // "customizations": {},
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "vscode",
+  "mounts": [
+    // "source=${localEnv:PRJ_DIR},target=${localEnv:PRJ_DIR},type=bind,consistency=cached",
+    // "source=${localEnv:DATASSD_DIR},target=${localEnv:DATASSD_DIR},type=bind,consistency=cached"
+  ],
 }
