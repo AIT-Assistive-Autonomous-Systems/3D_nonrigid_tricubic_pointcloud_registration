@@ -13,7 +13,7 @@
 #include <pdal/io/BufferReader.hpp>
 #include <pdal/io/LasReader.hpp>
 #include <pdal/io/LasWriter.hpp>
-#include "src/lib/named_column_matrix.h"
+#include "src/lib/named_column_matrix.hpp"
 
 NamedColumnMatrix<Eigen::MatrixXd> ImportFileToMatrix(const std::string& path,
                                                       const bool& with_normals,

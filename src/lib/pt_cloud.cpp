@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "pt_cloud.h"
+#include "pt_cloud.hpp"
 
 PtCloud::PtCloud(Eigen::MatrixXd X) : X_{X} {}
 

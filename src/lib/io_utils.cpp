@@ -1,4 +1,4 @@
-#include "io_utils.h"
+#include "io_utils.hpp"
 
 NamedColumnMatrix<Eigen::MatrixXd> ImportFileToMatrix(const std::string& path,
                                                       const bool& with_normals,

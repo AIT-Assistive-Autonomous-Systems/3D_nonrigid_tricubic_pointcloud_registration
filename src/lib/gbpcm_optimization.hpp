@@ -2,7 +2,7 @@
 #define GBPCM_OPTIMIZATION_H_
 
 #include <Eigen/Sparse>
-#include "correspondences.h"
+#include "correspondences.hpp"
 
 struct OptimizationResults
 {

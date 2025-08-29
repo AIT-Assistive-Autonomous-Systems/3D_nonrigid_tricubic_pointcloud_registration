@@ -1,4 +1,4 @@
-#include "translation_grid.h"
+#include "translation_grid.hpp"
 
 void TranslationGrid::Initialize(const Eigen::RowVector3d& grid_origin,
                                  const int& x_num_voxels,

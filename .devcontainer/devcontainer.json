@@ -15,13 +15,10 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-        "ms-vscode.cpptools-extension-pack",
         "foxundermoon.shell-format",
-        "GitHub.copilot",
-        "GitHub.copilot-chat",
-        "GitHub.vscode-pull-request-github",
         "ms-python.debugpy",
-        "ms-python.black-formatter"
+        "ms-python.black-formatter",
+        "llvm-vs-code-extensions.vscode-clangd"
       ]
     }
   },

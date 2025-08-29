@@ -5,7 +5,7 @@
 #include <fstream>
 #include <random>
 
-#include "pt_cloud.h"
+#include "pt_cloud.hpp"
 
 struct Dists
 {

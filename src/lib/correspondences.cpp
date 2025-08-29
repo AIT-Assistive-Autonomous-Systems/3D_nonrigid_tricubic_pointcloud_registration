@@ -1,4 +1,4 @@
-#include "correspondences.h"
+#include "correspondences.hpp"
 #include <nanoflann.hpp>
 #include <numeric>
 

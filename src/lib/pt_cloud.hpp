@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "translation_grid.h"
+#include "translation_grid.hpp"
 
 class PtCloud
 {

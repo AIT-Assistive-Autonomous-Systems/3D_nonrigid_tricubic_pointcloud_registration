@@ -1,4 +1,4 @@
-#include "gbpcm_optimization.h"
+#include "gbpcm_optimization.hpp"
 
 GBPCMOptimization::GBPCMOptimization() = default;
 
@@ -88,7 +88,7 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
   }
   optimization_results.success = true;
 
-  auto v{J * xhat - l};
+  // auto v{J * xhat - l};
 
   // Save estimated unknowns to translation grids
   correspondences.pc_mov().x_translation_grid().UpdateAllGridValsFromVector(xhat);
