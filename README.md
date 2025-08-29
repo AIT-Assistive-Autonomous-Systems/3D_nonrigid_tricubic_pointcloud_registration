@@ -1,15 +1,24 @@
-# 3D non-rigid tricubic pointcloud registration
+# 3D Non-Rigid Tricubic Point Cloud Registration
 
-## Introduction
+## Method
 
 This is an implementation of the method described in the paper "**Non-rigid point cloud registration using piece-wise tricubic polynomials as transformation model**".
 
 This method can be used to register two 3D point clouds which are related by a non-rigid transformation. In other words, when a 6DoF rigid-body transformation (rotation and translation) is insufficient to align the two point clouds, this method might be a suitable alternative.
 
+## Examples
+
 The following shows the non-rigid registration of two mobile mapping LiDAR point clouds:
 
 ![Non-rigid registration of two mobile mapping LiDAR point clouds](docs/demo-city.gif)
 (The effect of registration can best be seen on the overhead lines)
+
+The method is quite flexible. In this example, it was used to estimate a tree’s motion field between sunset (red) and sunrise (green):
+
+![Non-rigid registration of two terrestrial LiDAR point clouds of a tree](docs/demo-tls-tree.png)
+(corresponding video: [https://youtu.be/JNK9PtjtBlY?si=9gstIXi2sg1sHg7G](https://youtu.be/JNK9PtjtBlY?si=9gstIXi2sg1sHg7G))
+
+## Paper
 
 The paper can be found [here](https://www.mdpi.com/2072-4292/15/22/5348) - it can be cited as:
 
