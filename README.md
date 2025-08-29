@@ -38,3 +38,7 @@ A predefined development environment for [VSCode](https://code.visualstudio.com)
 1. Open the devcontainer with the command ``Dev Containers: Reopen in Container``. This will automatically build the development environment and open it. Then run in the container:
 	1. The command ``CMake: Build`` to build all targets.
 	2. The command ``Tasks: Run task`` to run the tests.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration&type=Date)](https://www.star-history.com/#AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration&Date)
