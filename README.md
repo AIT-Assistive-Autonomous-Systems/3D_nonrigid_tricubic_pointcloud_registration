@@ -8,15 +8,18 @@ This method can be used to register two 3D point clouds which are related by a n
 
 ## Examples
 
-The following shows the non-rigid registration of two mobile mapping LiDAR point clouds:
+The following shows the non-rigid registration of two mobile mapping LiDAR point clouds in an urban environment:
 
-![Non-rigid registration of two mobile mapping LiDAR point clouds](docs/demo-city.gif)
+![Non-rigid registration of two mobile mapping LiDAR point clouds (city)](docs/demo-city.gif)
 (The effect of registration can best be seen on the overhead lines)
 
 The method is quite flexible. In this example, it was used to estimate a tree’s motion field between sunset (red) and sunrise (green):
 
-![Non-rigid registration of two terrestrial LiDAR point clouds of a tree](docs/demo-tls-tree.png)
-(corresponding video: [https://youtu.be/JNK9PtjtBlY?si=9gstIXi2sg1sHg7G](https://youtu.be/JNK9PtjtBlY?si=9gstIXi2sg1sHg7G))
+[![Non-rigid registration of two terrestrial LiDAR point clouds of a tree](docs/demo-tls-tree.png)](https://youtu.be/JNK9PtjtBlY?si=9gstIXi2sg1sHg7G)
+
+Another example is the non-rigid registration of two mobile mapping LiDAR point clouds of a railway track (full video [here](https://youtu.be/HtRZxoqb4tc)):
+
+![Non-rigid registration of two mobile mapping LiDAR point clouds (rail)](docs/demo-rail.gif)
 
 ## Paper
 
