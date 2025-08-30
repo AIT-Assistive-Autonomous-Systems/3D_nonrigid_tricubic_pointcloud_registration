@@ -41,13 +41,18 @@ The paper can be found [here](https://www.mdpi.com/2072-4292/15/22/5348) - it ca
 
 A prototype implementation of this algorithm for 2D point clouds written in Matlab can be found [here](https://github.com/AIT-Assistive-Autonomous-Systems/2D_nonrigid_tricubic_pointcloud_registration).
 
-## Development
+## Building
 
 A predefined development environment for [VSCode](https://code.visualstudio.com) is provided [here](.devcontainer/). To use this environment, simply open this repository in VSCode and:
 1. Open the devcontainer with the command ``Dev Containers: Reopen in Container``. This will automatically build the development environment and open it. Then run in the container:
-	1. The command ``CMake: Build`` to build all targets.
-	2. The command ``Tasks: Run task`` to run the tests.
+    1. The command ``CMake: Select a Kit`` to select a compiler.
+    2. The command ``CMake: Select Variant`` to select a the ``Release`` build type.
+	  3. The command ``CMake: Build`` to build all targets.
+    4. The command ``CMake: Run tests`` to run the tests.
+2. You can find the two executables in the ``bin`` directory:
+    - ``nonrigid-icp`` is used to estimate the non-rigid transformation between two point clouds.
+    - ``nonrigid-icp-transform`` is used to apply the estimated transformation to a point cloud.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration&type=Date)](https://www.star-history.com/#AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration&type=Date)](https://www.star-history.com/#AIT-Assistive-Autonomous``-Systems/3D_nonrigid_tricubic_pointcloud_registration&Date)``

@@ -2,9 +2,9 @@
 #include <spdlog/stopwatch.h>
 #include <cxxopts.hpp>
 #include "src/lib/correspondences.hpp"
-#include "src/lib/gbpcm_optimization.hpp"
 #include "src/lib/io_utils.hpp"
 #include "src/lib/named_column_matrix.hpp"
+#include "src/lib/optimization.hpp"
 #include "src/lib/pt_cloud.hpp"
 
 struct CorrespondencesResults
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     Params params = ParseUserInputs(argc, argv);
 
     spdlog::stopwatch sw;
-    spdlog::info("Start of \"gbpcm\"");
+    spdlog::info("Start of \"nonrigid-icp\"");
 
     spdlog::info("Create point cloud objects");
     auto X_fix =
@@ -143,9 +143,8 @@ int main(int argc, char** argv)
       iteration_results.correspondences_results.std_point_to_plane_dists_before_optimization =
           correspondences.point_to_plane_dists_t().std;
 
-      GBPCMOptimization optimization{};
-      iteration_results.optimization_results =
-          GBPCMOptimization::Solve(correspondences, params.weights);
+      Optimization optimization{};
+      iteration_results.optimization_results = Optimization::Solve(correspondences, params.weights);
 
       if (iteration_results.optimization_results.success)
       {
@@ -164,7 +163,7 @@ int main(int argc, char** argv)
     spdlog::info("Export of estimated translation grids to \"{}\"", params.transform);
     pc_mov.ExportTranslationGrids(params.transform);
 
-    spdlog::info("Finished \"gbpcm\" in {:.3}s!", sw);
+    spdlog::info("Finished \"nonrigid-icp\" in {:.3}s!", sw);
   }
   catch (const std::exception& e)
   {
@@ -182,7 +181,7 @@ int main(int argc, char** argv)
 
 Params ParseUserInputs(int argc, char** argv)
 {
-  cxxopts::Options options("gbpcm", "Grid based point cloud matching.");
+  cxxopts::Options options("nonrigid-icp", "Grid based point cloud matching.");
 
   // clang-format off
   options.add_options()
@@ -194,7 +193,7 @@ Params ParseUserInputs(int argc, char** argv)
     cxxopts::value<std::string>())
     ("t,transform",
     "Path to generated transform file. This file contains the estimated translation grids for "
-    "the movable point cloud. The executable \"gbpcm-transform\" can be used to transform a "
+    "the movable point cloud. The executable \"nonrigid-icp-transform\" can be used to transform a "
     "point cloud with this transform file.",
     cxxopts::value<std::string>())
     ("v,voxel_size",

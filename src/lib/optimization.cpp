@@ -1,9 +1,9 @@
-#include "gbpcm_optimization.hpp"
+#include "optimization.hpp"
 
-GBPCMOptimization::GBPCMOptimization() = default;
+Optimization::Optimization() = default;
 
-OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
-                                             const std::vector<double>& weights_zero_observations)
+OptimizationResults Optimization::Solve(Correspondences& correspondences,
+                                        const std::vector<double>& weights_zero_observations)
 {
   OptimizationResults optimization_results{};  // returned
 
@@ -14,11 +14,11 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
   auto J_pc_mov_z_triplets{correspondences.pc_mov().z_translation_grid().J(X.pc_mov_X)};
 
   auto J_pc_mov_x_nx_triplets{
-      GBPCMOptimization::MultiplyWithComponentsOfNormalVectors(J_pc_mov_x_triplets, X.pc_fix_nx)};
+      Optimization::MultiplyWithComponentsOfNormalVectors(J_pc_mov_x_triplets, X.pc_fix_nx)};
   auto J_pc_mov_y_ny_triplets{
-      GBPCMOptimization::MultiplyWithComponentsOfNormalVectors(J_pc_mov_y_triplets, X.pc_fix_ny)};
+      Optimization::MultiplyWithComponentsOfNormalVectors(J_pc_mov_y_triplets, X.pc_fix_ny)};
   auto J_pc_mov_z_nz_triplets{
-      GBPCMOptimization::MultiplyWithComponentsOfNormalVectors(J_pc_mov_z_triplets, X.pc_fix_nz)};
+      Optimization::MultiplyWithComponentsOfNormalVectors(J_pc_mov_z_triplets, X.pc_fix_nz)};
 
   J_pc_mov_x_triplets.clear();
   J_pc_mov_y_triplets.clear();
@@ -28,7 +28,7 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
                    correspondences.pc_mov().y_translation_grid().num_grid_vals() +
                    correspondences.pc_mov().z_translation_grid().num_grid_vals()};
 
-  auto J_direct_obs_triplets(GBPCMOptimization::SparseIdentity(num_unknowns));
+  auto J_direct_obs_triplets(Optimization::SparseIdentity(num_unknowns));
 
   int num_observations{X.num + num_unknowns};
 
@@ -37,19 +37,19 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
                      J_pc_mov_z_nz_triplets.size() + J_direct_obs_triplets.size());
 
   // clang-format off
-  GBPCMOptimization::AddSubblockTriplets(0,
+  Optimization::AddSubblockTriplets(0,
                       0,
                       J_pc_mov_x_nx_triplets,
                       J_triplets);
-  GBPCMOptimization::AddSubblockTriplets(0,
+  Optimization::AddSubblockTriplets(0,
                       0,
                       J_pc_mov_y_ny_triplets,
                       J_triplets);
-  GBPCMOptimization::AddSubblockTriplets(0,
+  Optimization::AddSubblockTriplets(0,
                       0,
                       J_pc_mov_z_nz_triplets,
                       J_triplets);
-  GBPCMOptimization::AddSubblockTriplets(X.num,
+  Optimization::AddSubblockTriplets(X.num,
                       0,
                       J_direct_obs_triplets,
                       J_triplets);
@@ -103,7 +103,7 @@ OptimizationResults GBPCMOptimization::Solve(Correspondences& correspondences,
   return optimization_results;
 }
 
-std::vector<Eigen::Triplet<double>> GBPCMOptimization::SparseIdentity(const int& n)
+std::vector<Eigen::Triplet<double>> Optimization::SparseIdentity(const int& n)
 {
   std::vector<Eigen::Triplet<double>> triplets;
   triplets.reserve(n);
@@ -114,7 +114,7 @@ std::vector<Eigen::Triplet<double>> GBPCMOptimization::SparseIdentity(const int&
   return triplets;
 }
 
-std::vector<Eigen::Triplet<double>> GBPCMOptimization::MultiplyWithComponentsOfNormalVectors(
+std::vector<Eigen::Triplet<double>> Optimization::MultiplyWithComponentsOfNormalVectors(
     const std::vector<Eigen::Triplet<double>>& triplets_in, const Eigen::VectorXd& n_component)
 {
   std::vector<Eigen::Triplet<double>> triplets_out;
@@ -130,11 +130,10 @@ std::vector<Eigen::Triplet<double>> GBPCMOptimization::MultiplyWithComponentsOfN
   return triplets_out;
 }
 
-void GBPCMOptimization::AddSubblockTriplets(
-    const int& first_row,
-    const int& first_col,
-    const std::vector<Eigen::Triplet<double>>& subblock_triplets,
-    std::vector<Eigen::Triplet<double>>& triplets)
+void Optimization::AddSubblockTriplets(const int& first_row,
+                                       const int& first_col,
+                                       const std::vector<Eigen::Triplet<double>>& subblock_triplets,
+                                       std::vector<Eigen::Triplet<double>>& triplets)
 {
   for (auto const& triplet : subblock_triplets)
   {

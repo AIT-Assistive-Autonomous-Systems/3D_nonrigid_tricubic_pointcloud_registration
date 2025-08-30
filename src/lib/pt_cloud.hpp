@@ -64,7 +64,7 @@ class PtCloud
 
 struct HeaderInfo
 {
-  char identifier[10]{"gbpcm"};
+  char identifier[10]{"nricp"};
   int fileversion{1};
   const int length{1000};  // bytes
 };

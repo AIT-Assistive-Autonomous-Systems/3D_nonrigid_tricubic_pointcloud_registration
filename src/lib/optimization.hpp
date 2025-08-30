@@ -1,5 +1,5 @@
-#ifndef GBPCM_OPTIMIZATION_H_
-#define GBPCM_OPTIMIZATION_H_
+#ifndef OPTIMIZATION_H_
+#define OPTIMIZATION_H_
 
 #include <Eigen/Sparse>
 #include "correspondences.hpp"
@@ -11,10 +11,10 @@ struct OptimizationResults
   int num_unknowns{};
 };
 
-class GBPCMOptimization
+class Optimization
 {
  public:
-  GBPCMOptimization();
+  Optimization();
   static OptimizationResults Solve(Correspondences& correspondences,
                                    const std::vector<double>& weights_zero_observations);
 
@@ -28,4 +28,4 @@ class GBPCMOptimization
                                   std::vector<Eigen::Triplet<double>>& triplets);
 };
 
-#endif  // GBPCM_OPTIMIZATION_H_
+#endif  // OPTIMIZATION_H_

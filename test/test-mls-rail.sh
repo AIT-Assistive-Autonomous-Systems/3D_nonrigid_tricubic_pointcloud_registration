@@ -36,14 +36,14 @@ pdal translate pcmov_preprocessed.laz pcmov_preprocessed.xyz \
 mkdir -p results
 
 log "estimate transformation"
-gbpcm \
+nonrigid-icp \
     --fixed pcfix_preprocessed.xyz \
     --movable pcmov_preprocessed.xyz \
-    --transform results/pcmov.gbpcm \
+    --transform results/pcmov.nricp \
     --voxel_size 20
 
 log "apply transformation"
-gbpcm-transform \
+nonrigid-icp-transform \
     --pc_in pcmov_preprocessed.xyz \
     --pc_out results/pcmov_preprocessed_transformed.xyz \
-    --transform results/pcmov.gbpcm
+    --transform results/pcmov.nricp

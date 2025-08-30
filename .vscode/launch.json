@@ -5,10 +5,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "gbpcm",
+      "name": "nonrigid-icp",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/gbpcm_d",
+      "program": "${workspaceFolder}/bin/nonrigid-icp_d",
       "args": [
         "--fixed",
         "test/test-eagle/pcfix.txt",
@@ -17,7 +17,7 @@
         "test/test-eagle/pcmov.txt",
         // "test/test-nordbahn/pcmov.txt",
         "--transform",
-        "test/test-eagle/results/pcmov.gbpcm",
+        "test/test-eagle/results/pcmov.nricp",
         "--voxel_size",
         "0.25",
         "--buffer_voxels",
@@ -47,17 +47,17 @@
       ]
     },
     {
-      "name": "gbpcm_transform",
+      "name": "nonrigid-icp-transform",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/gbpcm-transform_d",
+      "program": "${workspaceFolder}/bin/nonrigid-icp-transform_d",
       "args": [
         "--pc_in",
         "test/test-nordbahn/pcmov.txt",
         "--pc_out",
         "test/test-nordbahn/results/pcmov_transformed.txt",
         "--transform",
-        "test/test-nordbahn/results/pcmov.gbpcm"
+        "test/test-nordbahn/results/pcmov.nricp"
       ],
       "preLaunchTask": "",
       "stopAtEntry": false,

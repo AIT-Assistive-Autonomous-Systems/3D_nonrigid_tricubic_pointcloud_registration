@@ -171,9 +171,9 @@ void PtCloud::ImportTranslationGrids(const std::string& filepath)
   int z_num_voxels{};
   double voxel_size{};
   read_value(file, header_info.identifier);
-  if (strcmp(header_info.identifier, "gbpcm") != 0)
+  if (strcmp(header_info.identifier, "nricp") != 0)
   {  // check identifier
-    std::cerr << "Header of \"" << filepath << "\" does not start with char \"gbpcm\"!"
+    std::cerr << "Header of \"" << filepath << "\" does not start with char \"nricp\"!"
               << std::endl;
     exit(1);
   }
