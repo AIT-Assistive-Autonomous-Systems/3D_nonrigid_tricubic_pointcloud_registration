@@ -7,15 +7,13 @@
 
 #include "translation_grid.hpp"
 
-class PtCloud
-{
+class PtCloud {
  public:
   PtCloud(Eigen::MatrixXd X);
 
   void SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd nz);
   void SetCorrespondenceId(Eigen::VectorXd correspondence_id);
-  void InitializeTranslationGrids(const double& voxel_size,
-                                  const uint32_t& buffer_voxels,
+  void InitializeTranslationGrids(const double& voxel_size, const uint32_t& buffer_voxels,
                                   const std::vector<double>& grid_limits);
   void ImportTranslationGrids(const std::string& filepath);
   void ExportTranslationGrids(const std::string& filepath);
@@ -62,8 +60,7 @@ class PtCloud
   Eigen::Matrix<double, Eigen::Dynamic, 64> X_power_;
 };
 
-struct HeaderInfo
-{
+struct HeaderInfo {
   char identifier[10]{"nricp"};
   int fileversion{1};
   const int length{1000};  // bytes

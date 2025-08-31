@@ -7,8 +7,7 @@
 
 #include "pt_cloud.hpp"
 
-struct Dists
-{
+struct Dists {
   Eigen::VectorXd dists{};
   double mean{NAN};
   double median{NAN};
@@ -16,8 +15,7 @@ struct Dists
   double std_mad{NAN};
 };
 
-struct CorrespondencesPointsWithAttributes
-{
+struct CorrespondencesPointsWithAttributes {
   int num{};
   Eigen::MatrixX3d pc_fix_X{};
   Eigen::VectorXd pc_fix_nx{};
@@ -27,8 +25,7 @@ struct CorrespondencesPointsWithAttributes
   Eigen::MatrixX3d pc_mov_Xt{};
 };
 
-class Correspondences
-{
+class Correspondences {
  public:
   Correspondences(PtCloud& pc_fix, PtCloud& pc_mov);
   void SelectPointsByRandomSampling(const uint32_t& num_correspondences);
@@ -65,8 +62,7 @@ class Correspondences
   Dists euclidean_dists_t_;
 };
 
-Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd& X,
-                          const Eigen::MatrixXd& X_query,
+Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_query,
                           const int& k = 1);
 
 template <typename T>

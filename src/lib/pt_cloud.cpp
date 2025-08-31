@@ -1,35 +1,30 @@
+#include "pt_cloud.hpp"
+
 #include <fstream>
 #include <iostream>
 
-#include "pt_cloud.hpp"
-
 PtCloud::PtCloud(Eigen::MatrixXd X) : X_{X} {}
 
-void PtCloud::SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd nz)
-{
+void PtCloud::SetNormals(Eigen::VectorXd nx, Eigen::VectorXd ny, Eigen::VectorXd nz) {
   nx_ = nx;
   ny_ = ny;
   nz_ = nz;
 }
 
-void PtCloud::SetCorrespondenceId(Eigen::VectorXd correspondence_id)
-{
+void PtCloud::SetCorrespondenceId(Eigen::VectorXd correspondence_id) {
   correspondence_id_ = correspondence_id;
 }
 
 long PtCloud::NumPts() { return X_.rows(); }
 
-void PtCloud::InitializeTranslationGrids(const double& voxel_size,
-                                         const uint32_t& buffer_voxels,
-                                         const std::vector<double>& grid_limits)
-{
+void PtCloud::InitializeTranslationGrids(const double& voxel_size, const uint32_t& buffer_voxels,
+                                         const std::vector<double>& grid_limits) {
   // Check if grid_limits elements are all zero
   bool grid_limits_are_not_set =
       std::all_of(grid_limits.begin(), grid_limits.end(), [](int i) { return i == 0; });
 
   std::vector<double> grid_limits_with_buffer(6);
-  if (grid_limits_are_not_set)
-  {
+  if (grid_limits_are_not_set) {
     grid_limits_with_buffer[0] = floor(x_min()) - buffer_voxels * voxel_size;
     grid_limits_with_buffer[1] = floor(y_min()) - buffer_voxels * voxel_size;
     grid_limits_with_buffer[2] = floor(z_min()) - buffer_voxels * voxel_size;
@@ -45,9 +40,7 @@ void PtCloud::InitializeTranslationGrids(const double& voxel_size,
         grid_limits_with_buffer[2] +
         ceil((z_max() - grid_limits_with_buffer[2]) / voxel_size) * voxel_size +
         buffer_voxels * voxel_size;
-  }
-  else
-  {
+  } else {
     // ToDo Check if passed limits are valid
     grid_limits_with_buffer[0] = grid_limits[0] - buffer_voxels * voxel_size;
     grid_limits_with_buffer[1] = grid_limits[1] - buffer_voxels * voxel_size;
@@ -66,29 +59,28 @@ void PtCloud::InitializeTranslationGrids(const double& voxel_size,
 
   int first_idx_adj{};
   first_idx_adj = 0;
-  x_translation_grid_.Initialize(
-      grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size, first_idx_adj);
+  x_translation_grid_.Initialize(grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size,
+                                 first_idx_adj);
 
   first_idx_adj = x_translation_grid_.num_grid_vals();
-  y_translation_grid_.Initialize(
-      grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size, first_idx_adj);
+  y_translation_grid_.Initialize(grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size,
+                                 first_idx_adj);
 
   first_idx_adj = x_translation_grid_.num_grid_vals() + y_translation_grid_.num_grid_vals();
-  z_translation_grid_.Initialize(
-      grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size, first_idx_adj);
+  z_translation_grid_.Initialize(grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size,
+                                 first_idx_adj);
 
   Xt_ = X_;
 }
 
-void PtCloud::ExportTranslationGrids(const std::string& filepath)
-{
-  auto write_value = [](std::ofstream& file, const auto& value)
-  { file.write(reinterpret_cast<const char*>(&value), sizeof(value)); };
+void PtCloud::ExportTranslationGrids(const std::string& filepath) {
+  auto write_value = [](std::ofstream& file, const auto& value) {
+    file.write(reinterpret_cast<const char*>(&value), sizeof(value));
+  };
 
   // Open file
   std::ofstream file{filepath, std::ios::out | std::ios::binary};
-  if (!file.is_open())
-  {
+  if (!file.is_open()) {
     std::cerr << "Cannot open file \"" << filepath << "\"!" << std::endl;
     exit(1);
   }
@@ -109,8 +101,8 @@ void PtCloud::ExportTranslationGrids(const std::string& filepath)
   // Write data
   for (int x_voxel_idx = 0; x_voxel_idx < x_translation_grid_.x_num_voxels() + 1; x_voxel_idx++)
     for (int y_voxel_idx = 0; y_voxel_idx < x_translation_grid_.y_num_voxels() + 1; y_voxel_idx++)
-      for (int z_voxel_idx = 0; z_voxel_idx < x_translation_grid_.z_num_voxels() + 1; z_voxel_idx++)
-      {
+      for (int z_voxel_idx = 0; z_voxel_idx < x_translation_grid_.z_num_voxels() + 1;
+           z_voxel_idx++) {
         // clang-format off
         write_value(file, x_translation_grid_.grid_vals()[x_voxel_idx][y_voxel_idx][z_voxel_idx].f);
         write_value(file, x_translation_grid_.grid_vals()[x_voxel_idx][y_voxel_idx][z_voxel_idx].fx);
@@ -142,23 +134,21 @@ void PtCloud::ExportTranslationGrids(const std::string& filepath)
       }
 
   // Final check and close file
-  if (!file.good())
-  {
+  if (!file.good()) {
     std::cerr << "Error occurred writing file \"" << filepath << "\"!" << std::endl;
     exit(1);
   }
   file.close();
 }
 
-void PtCloud::ImportTranslationGrids(const std::string& filepath)
-{
-  auto read_value = [](std::ifstream& file, auto& var)
-  { file.read(reinterpret_cast<char*>(&var), sizeof(var)); };
+void PtCloud::ImportTranslationGrids(const std::string& filepath) {
+  auto read_value = [](std::ifstream& file, auto& var) {
+    file.read(reinterpret_cast<char*>(&var), sizeof(var));
+  };
 
   // Open file
   std::ifstream file{filepath, std::ios::in | std::ios::binary};
-  if (!file.is_open())
-  {
+  if (!file.is_open()) {
     std::cerr << "Cannot open file \"" << filepath << "\"!" << std::endl;
     exit(1);
   }
@@ -171,16 +161,14 @@ void PtCloud::ImportTranslationGrids(const std::string& filepath)
   int z_num_voxels{};
   double voxel_size{};
   read_value(file, header_info.identifier);
-  if (strcmp(header_info.identifier, "nricp") != 0)
-  {  // check identifier
+  if (strcmp(header_info.identifier, "nricp") != 0) {  // check identifier
     std::cerr << "Header of \"" << filepath << "\" does not start with char \"nricp\"!"
               << std::endl;
     exit(1);
   }
   int current_fileversion{header_info.fileversion};  // save file version for check
   read_value(file, header_info.fileversion);
-  if (header_info.fileversion != current_fileversion)
-  {  // check file version
+  if (header_info.fileversion != current_fileversion) {  // check file version
     std::cerr << "File version of \"" << filepath << "\" is \"" << header_info.fileversion
               << "\", but should be \"" << current_fileversion << "\"!" << std::endl;
     exit(1);
@@ -196,14 +184,12 @@ void PtCloud::ImportTranslationGrids(const std::string& filepath)
 
   // Verify header
   HeaderInfo header_info_for_verification;
-  if (strcmp(header_info.identifier, header_info_for_verification.identifier) != 0)
-  {
+  if (strcmp(header_info.identifier, header_info_for_verification.identifier) != 0) {
     std::cerr << "Error importing \"" << filepath << "\"!" << std::endl;
     std::cerr << "Header identifier is \"" << header_info.identifier << "\" but must be \""
               << header_info_for_verification.identifier << "\"!" << std::endl;
   }
-  if (header_info.fileversion != header_info_for_verification.fileversion)
-  {
+  if (header_info.fileversion != header_info_for_verification.fileversion) {
     std::cerr << "Error importing \"" << filepath << "\"!" << std::endl;
     std::cerr << "Header fileversion is \"" << header_info.fileversion << "\" but must be \""
               << header_info_for_verification.fileversion << "\"!" << std::endl;
@@ -211,19 +197,18 @@ void PtCloud::ImportTranslationGrids(const std::string& filepath)
 
   // Initialize grids
   // ToDo Make first_idx_adj an optional argument
-  x_translation_grid_.Initialize(
-      grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size, 0);
-  y_translation_grid_.Initialize(
-      grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size, 0);
-  z_translation_grid_.Initialize(
-      grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size, 0);
+  x_translation_grid_.Initialize(grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size,
+                                 0);
+  y_translation_grid_.Initialize(grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size,
+                                 0);
+  z_translation_grid_.Initialize(grid_origin, x_num_voxels, y_num_voxels, z_num_voxels, voxel_size,
+                                 0);
 
   GridVals grid_vals_new{};
 
   for (int x_voxel_idx = 0; x_voxel_idx < x_num_voxels + 1; x_voxel_idx++)
     for (int y_voxel_idx = 0; y_voxel_idx < y_num_voxels + 1; y_voxel_idx++)
-      for (int z_voxel_idx = 0; z_voxel_idx < z_num_voxels + 1; z_voxel_idx++)
-      {
+      for (int z_voxel_idx = 0; z_voxel_idx < z_num_voxels + 1; z_voxel_idx++) {
         read_value(file, grid_vals_new.f);
         read_value(file, grid_vals_new.fx);
         read_value(file, grid_vals_new.fy);
@@ -232,8 +217,8 @@ void PtCloud::ImportTranslationGrids(const std::string& filepath)
         read_value(file, grid_vals_new.fxz);
         read_value(file, grid_vals_new.fyz);
         read_value(file, grid_vals_new.fxyz);
-        x_translation_grid().UpdateVoxelGridVals(
-            x_voxel_idx, y_voxel_idx, z_voxel_idx, grid_vals_new);
+        x_translation_grid().UpdateVoxelGridVals(x_voxel_idx, y_voxel_idx, z_voxel_idx,
+                                                 grid_vals_new);
 
         read_value(file, grid_vals_new.f);
         read_value(file, grid_vals_new.fx);
@@ -243,8 +228,8 @@ void PtCloud::ImportTranslationGrids(const std::string& filepath)
         read_value(file, grid_vals_new.fxz);
         read_value(file, grid_vals_new.fyz);
         read_value(file, grid_vals_new.fxyz);
-        y_translation_grid().UpdateVoxelGridVals(
-            x_voxel_idx, y_voxel_idx, z_voxel_idx, grid_vals_new);
+        y_translation_grid().UpdateVoxelGridVals(x_voxel_idx, y_voxel_idx, z_voxel_idx,
+                                                 grid_vals_new);
 
         read_value(file, grid_vals_new.f);
         read_value(file, grid_vals_new.fx);
@@ -254,29 +239,26 @@ void PtCloud::ImportTranslationGrids(const std::string& filepath)
         read_value(file, grid_vals_new.fxz);
         read_value(file, grid_vals_new.fyz);
         read_value(file, grid_vals_new.fxyz);
-        z_translation_grid().UpdateVoxelGridVals(
-            x_voxel_idx, y_voxel_idx, z_voxel_idx, grid_vals_new);
+        z_translation_grid().UpdateVoxelGridVals(x_voxel_idx, y_voxel_idx, z_voxel_idx,
+                                                 grid_vals_new);
       }
 
   // Final check and close file
-  if (!file.good())
-  {
+  if (!file.good()) {
     std::cerr << "Error occurred reading file \"" << filepath << "\"!" << std::endl;
     exit(1);
   }
   file.close();
 }
 
-void PtCloud::InitMatricesForUpdateXt()
-{
+void PtCloud::InitMatricesForUpdateXt() {
   auto [X_voxel_idx, Xn_voxel]{x_translation_grid_.GetGridReference(X_)};
   X_voxel_idx_ = X_voxel_idx;
   Xn_voxel_ = Xn_voxel;
   X_power_ = TranslationGrid::Compute_X_power(Xn_voxel);
 }
 
-void PtCloud::UpdateXt()
-{
+void PtCloud::UpdateXt() {
   auto tx{x_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
   auto ty{y_translation_grid_.p(X_, X_power_, X_voxel_idx_)};
   auto tz{z_translation_grid_.p(X_, X_power_, X_voxel_idx_)};

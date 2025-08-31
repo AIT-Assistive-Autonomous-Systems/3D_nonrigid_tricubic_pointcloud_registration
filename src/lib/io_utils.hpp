@@ -13,6 +13,7 @@
 #include <pdal/io/BufferReader.hpp>
 #include <pdal/io/LasReader.hpp>
 #include <pdal/io/LasWriter.hpp>
+
 #include "src/lib/named_column_matrix.hpp"
 
 NamedColumnMatrix<Eigen::MatrixXd> ImportFileToMatrix(const std::string& path,
@@ -28,8 +29,7 @@ NamedColumnMatrix<Eigen::MatrixXd> ExtractMatrix(const pdal::PointViewPtr view,
 std::string PointcloudFieldsToString(const pdal::PointViewPtr view);
 
 // Save pointcloud to file
-void SaveMatrixToFile(const NamedColumnMatrix<Eigen::MatrixXd>& A,
-                      const std::string& path_in,
+void SaveMatrixToFile(const NamedColumnMatrix<Eigen::MatrixXd>& A, const std::string& path_in,
                       const std::string& path_out);
 
 // Create PDAL reader signature from a file extension

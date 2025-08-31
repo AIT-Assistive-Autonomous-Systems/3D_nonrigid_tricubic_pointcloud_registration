@@ -10,8 +10,7 @@ typedef Eigen::Matrix<double, 64, 1> Vector64d;
 typedef Eigen::Matrix<int, 64, 1> Vector64i;
 typedef Eigen::Matrix<int, 8, 1> Vector8i;
 
-struct GridVals
-{
+struct GridVals {
   double f{0};
   double fx{0};
   double fy{0};
@@ -22,8 +21,7 @@ struct GridVals
   double fxyz{0};
 };
 
-struct GridIdxAdj
-{
+struct GridIdxAdj {
   int f{0};
   int fx{0};
   int fy{0};
@@ -34,14 +32,10 @@ struct GridIdxAdj
   int fxyz{0};
 };
 
-class TranslationGrid
-{
+class TranslationGrid {
  public:
-  void Initialize(const Eigen::RowVector3d& grid_origin,
-                  const int& x_num_voxels,
-                  const int& y_num_voxels,
-                  const int& z_num_voxels,
-                  const double& voxel_size,
+  void Initialize(const Eigen::RowVector3d& grid_origin, const int& x_num_voxels,
+                  const int& y_num_voxels, const int& z_num_voxels, const double& voxel_size,
                   const int& first_idx_adj);
   Eigen::VectorXd p(const Eigen::MatrixX3d& X);
   // This version of p() can be used to save computation time if >1 translation grid is used, e.g.
@@ -51,9 +45,7 @@ class TranslationGrid
                     const Eigen::MatrixX3i& X_voxel_idx);
   std::vector<Eigen::Triplet<double>> J(const Eigen::MatrixX3d& X);
   void UpdateAllGridValsFromVector(const Eigen::VectorXd& grid_vals_new);
-  void UpdateVoxelGridVals(const int& x_voxel_idx,
-                           const int& y_voxel_idx,
-                           const int& z_voxel_idx,
+  void UpdateVoxelGridVals(const int& x_voxel_idx, const int& y_voxel_idx, const int& z_voxel_idx,
                            const GridVals grid_vals_new);
   static Eigen::Matrix<double, Eigen::Dynamic, 64> Compute_X_power(
       const Eigen::MatrixX3d& Xn_voxel);

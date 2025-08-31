@@ -1,14 +1,15 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
+
 #include <cxxopts.hpp>
+
 #include "src/lib/correspondences.hpp"
 #include "src/lib/io_utils.hpp"
 #include "src/lib/named_column_matrix.hpp"
 #include "src/lib/optimization.hpp"
 #include "src/lib/pt_cloud.hpp"
 
-struct CorrespondencesResults
-{
+struct CorrespondencesResults {
   int num{};
   double mean_point_to_plane_dists_before_optimization{};
   double std_point_to_plane_dists_before_optimization{};
@@ -16,15 +17,13 @@ struct CorrespondencesResults
   double std_point_to_plane_dists_after_optimization{};
 };
 
-struct IterationResults
-{
+struct IterationResults {
   int it{};
   OptimizationResults optimization_results{};
   CorrespondencesResults correspondences_results{};
 };
 
-struct Params
-{
+struct Params {
   std::string fixed;
   std::string movable;
   std::string transform;
@@ -44,10 +43,8 @@ Params ParseUserInputs(int argc, char** argv);
 
 void ReportIterationResults(const IterationResults& iteration_results);
 
-int main(int argc, char** argv)
-{
-  try
-  {
+int main(int argc, char** argv) {
+  try {
     spdlog::set_pattern("%v");
 
     Params params = ParseUserInputs(argc, argv);
@@ -61,17 +58,14 @@ int main(int argc, char** argv)
     auto X_mov =
         ImportFileToMatrix(params.movable, true, params.matching_mode == "id" ? true : false);
 
-    auto pc_fix{PtCloud(
-        X_fix(Eigen::all,
-              {X_fix.namedColIndex("x"), X_fix.namedColIndex("y"), X_fix.namedColIndex("z")}))};
-    auto pc_mov{PtCloud(
-        X_mov(Eigen::all,
-              {X_fix.namedColIndex("x"), X_fix.namedColIndex("y"), X_fix.namedColIndex("z")}))};
+    auto pc_fix{PtCloud(X_fix(Eigen::all, {X_fix.namedColIndex("x"), X_fix.namedColIndex("y"),
+                                           X_fix.namedColIndex("z")}))};
+    auto pc_mov{PtCloud(X_mov(Eigen::all, {X_fix.namedColIndex("x"), X_fix.namedColIndex("y"),
+                                           X_fix.namedColIndex("z")}))};
 
     pc_fix.SetNormals(X_fix.namedCol("nx"), X_fix.namedCol("ny"), X_fix.namedCol("nz"));
     pc_mov.SetNormals(X_mov.namedCol("nx"), X_mov.namedCol("ny"), X_mov.namedCol("nz"));
-    if (params.matching_mode == "id")
-    {
+    if (params.matching_mode == "id") {
       pc_fix.SetCorrespondenceId(X_fix.namedCol("correspondence_id"));
       pc_mov.SetCorrespondenceId(X_mov.namedCol("correspondence_id"));
     }
@@ -112,24 +106,19 @@ int main(int argc, char** argv)
 
     spdlog::info("Start iterative point cloud matching");
     IterationResults iteration_results{};
-    for (uint32_t it = 0; it < params.num_iterations; it++)
-    {
+    for (uint32_t it = 0; it < params.num_iterations; it++) {
       iteration_results.it = it + 1;
 
       correspondences.SetSelectedPoints(idx_pc_fix);
-      if (params.matching_mode == "nn")
-      {
+      if (params.matching_mode == "nn") {
         correspondences.MatchPointsByNearestNeighbor();
-      }
-      else if (params.matching_mode == "id")
-      {
+      } else if (params.matching_mode == "id") {
         correspondences.MatchPointsByCorrespondenceId();
       }
       correspondences.RejectMaxEuclideanDistanceCriteria(params.max_euclidean_distance);
       correspondences.RejectStdMadCriteria();
 
-      if (debug_mode)
-      {
+      if (debug_mode) {
         char it_string[100];
         std::sprintf(it_string, "%03d", iteration_results.it);
         auto debug_file_name =
@@ -146,16 +135,13 @@ int main(int argc, char** argv)
       Optimization optimization{};
       iteration_results.optimization_results = Optimization::Solve(correspondences, params.weights);
 
-      if (iteration_results.optimization_results.success)
-      {
+      if (iteration_results.optimization_results.success) {
         iteration_results.correspondences_results.mean_point_to_plane_dists_after_optimization =
             correspondences.point_to_plane_dists_t().mean;
         iteration_results.correspondences_results.std_point_to_plane_dists_after_optimization =
             correspondences.point_to_plane_dists_t().std;
         ReportIterationResults(iteration_results);
-      }
-      else
-      {
+      } else {
         throw std::runtime_error("Optimization was not successful!");
       }
     }
@@ -164,14 +150,10 @@ int main(int argc, char** argv)
     pc_mov.ExportTranslationGrids(params.transform);
 
     spdlog::info("Finished \"nonrigid-icp\" in {:.3}s!", sw);
-  }
-  catch (const std::exception& e)
-  {
+  } catch (const std::exception& e) {
     std::cerr << "Caught exception: " << e.what() << std::endl;
     return 1;
-  }
-  catch (...)
-  {
+  } catch (...) {
     std::cerr << "Caught unknown exception." << std::endl;
     return 1;
   }
@@ -179,8 +161,7 @@ int main(int argc, char** argv)
   return 0;
 }
 
-Params ParseUserInputs(int argc, char** argv)
-{
+Params ParseUserInputs(int argc, char** argv) {
   cxxopts::Options options("nonrigid-icp", "Grid based point cloud matching.");
 
   // clang-format off
@@ -208,7 +189,8 @@ Params ParseUserInputs(int argc, char** argv)
     "Number of voxels to be used as buffer around the translation grids",
     cxxopts::value<uint32_t>()->default_value("2"))
     ("a,matching_mode",
-    "Matching mode for correspondences. Available modes are \"nn\" (nearest neighbor) and \"id\" (correspondence_id).",
+    "Matching mode for correspondences. Available modes are \"nn\" (nearest neighbor) and \"id\" "
+    "(correspondence_id).",
     cxxopts::value<std::string>()->default_value("nn"))
     ("n,num_correspondences",
     "Number of correspondences",
@@ -234,8 +216,7 @@ Params ParseUserInputs(int argc, char** argv)
 
   auto result = options.parse(argc, argv);
 
-  if (result.count("help"))
-  {
+  if (result.count("help")) {
     std::cout << options.help() << std::endl;
     exit(0);
   }
@@ -257,36 +238,29 @@ Params ParseUserInputs(int argc, char** argv)
   params.suppress_logging = result["suppress_logging"].as<bool>();
 
   // Check parameter inputs
-  if (params.suppress_logging)
-  {
+  if (params.suppress_logging) {
     spdlog::set_level(spdlog::level::off);
   }
 
-  if (params.matching_mode == "id")
-  {
+  if (params.matching_mode == "id") {
     params.num_iterations = 1;
     spdlog::info("Set num_iterations to {:d} as matching mode \"{}\" was selected.",
-                 params.num_iterations,
-                 params.matching_mode.c_str());
+                 params.num_iterations, params.matching_mode.c_str());
   }
 
-  if (params.matching_mode != "nn" && params.matching_mode != "id")
-  {
+  if (params.matching_mode != "nn" && params.matching_mode != "id") {
     std::string error_string = "Matching mode \"" + params.matching_mode + "\" is not available!";
     throw std::runtime_error(error_string);
   }
 
-  if (params.debug_dir != "")
-  {
+  if (params.debug_dir != "") {
     // Add trailing slash if not present
-    if (params.debug_dir.back() != '/')
-    {
+    if (params.debug_dir.back() != '/') {
       params.debug_dir += '/';
     }
 
     // Check if path exists
-    if (!std::filesystem::exists(params.debug_dir))
-    {
+    if (!std::filesystem::exists(params.debug_dir)) {
       std::string error_string = "Debug directory \"" + params.debug_dir + "\" does not exist!";
       throw std::runtime_error(error_string);
     }
@@ -295,24 +269,14 @@ Params ParseUserInputs(int argc, char** argv)
   return params;
 }
 
-void ReportIterationResults(const IterationResults& iteration_results)
-{
-  if (iteration_results.it == 1)
-  {
-    spdlog::info("{:>4} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}",
-                 "it",
-                 "num_corr",
-                 "num_obs",
-                 "num_unkn",
-                 "mean(dp)",
-                 "mean(dp)",
-                 "std(dp)",
-                 "std(dp)");
+void ReportIterationResults(const IterationResults& iteration_results) {
+  if (iteration_results.it == 1) {
+    spdlog::info("{:>4} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}", "it", "num_corr",
+                 "num_obs", "num_unkn", "mean(dp)", "mean(dp)", "std(dp)", "std(dp)");
     spdlog::info("{:37} {:>10} {:>10} {:>10} {:>10}", "", "before", "after", "before", "after");
   }
   spdlog::info(
-      "{:4d} {:10d} {:10d} {:10d} {:10.3f} {:10.3f} {:10.3f} {:10.3f}",
-      iteration_results.it,
+      "{:4d} {:10d} {:10d} {:10d} {:10.3f} {:10.3f} {:10.3f} {:10.3f}", iteration_results.it,
       iteration_results.correspondences_results.num,
       iteration_results.optimization_results.num_observations,
       iteration_results.optimization_results.num_unknowns,
