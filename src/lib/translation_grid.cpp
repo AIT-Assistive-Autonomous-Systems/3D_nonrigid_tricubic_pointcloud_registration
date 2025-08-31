@@ -1,5 +1,7 @@
 #include "translation_grid.hpp"
 
+#include <stdexcept>
+
 void TranslationGrid::Initialize(const Eigen::RowVector3d& grid_origin, const int& x_num_voxels,
                                  const int& y_num_voxels, const int& z_num_voxels,
                                  const double& voxel_size, const int& first_idx_adj) {
@@ -133,6 +135,21 @@ std::tuple<Eigen::MatrixX3i, Eigen::MatrixX3d> TranslationGrid::GetGridReference
     X_voxel_idx(i, 0) = floor(X_grid(0) / voxel_size_);
     X_voxel_idx(i, 1) = floor(X_grid(1) / voxel_size_);
     X_voxel_idx(i, 2) = floor(X_grid(2) / voxel_size_);
+
+    // Check bounds and handle points outside the transformation domain
+    if (X_voxel_idx(i, 0) < 0 || X_voxel_idx(i, 0) >= x_num_voxels_ || X_voxel_idx(i, 1) < 0 ||
+        X_voxel_idx(i, 1) >= y_num_voxels_ || X_voxel_idx(i, 2) < 0 ||
+        X_voxel_idx(i, 2) >= z_num_voxels_) {
+      throw std::out_of_range(
+          "Point (" + std::to_string(X(i, 0)) + ", " + std::to_string(X(i, 1)) + ", " +
+          std::to_string(X(i, 2)) +
+          ") is outside the transformation domain. Grid bounds: xmin/ymin/zmin = " +
+          std::to_string(grid_origin_(0)) + "/" + std::to_string(grid_origin_(1)) + "/" +
+          std::to_string(grid_origin_(2)) +
+          ", xmax/ymax/zmax = " + std::to_string(grid_origin_(0) + x_num_voxels_ * voxel_size_) +
+          "/" + std::to_string(grid_origin_(1) + y_num_voxels_ * voxel_size_) + "/" +
+          std::to_string(grid_origin_(2) + z_num_voxels_ * voxel_size_));
+    }
 
     // Reduce index by 1 for points exactly on the upper boundaries of the grid
     if (X_voxel_idx(i, 0) == x_num_voxels_) X_voxel_idx(i, 0) -= 1;
