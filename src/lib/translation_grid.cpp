@@ -143,10 +143,10 @@ std::tuple<Eigen::MatrixX3i, Eigen::MatrixX3d> TranslationGrid::GetGridReference
       throw std::out_of_range(
           "Point (" + std::to_string(X(i, 0)) + ", " + std::to_string(X(i, 1)) + ", " +
           std::to_string(X(i, 2)) +
-          ") is outside the transformation domain. Grid bounds: xmin/ymin/zmin = " +
+          ") is outside the transformation domain. Grid bounds: x_min/y_min/z_min = " +
           std::to_string(grid_origin_(0)) + "/" + std::to_string(grid_origin_(1)) + "/" +
           std::to_string(grid_origin_(2)) +
-          ", xmax/ymax/zmax = " + std::to_string(grid_origin_(0) + x_num_voxels_ * voxel_size_) +
+          ", x_max/y_max/z_max = " + std::to_string(grid_origin_(0) + x_num_voxels_ * voxel_size_) +
           "/" + std::to_string(grid_origin_(1) + y_num_voxels_ * voxel_size_) + "/" +
           std::to_string(grid_origin_(2) + z_num_voxels_ * voxel_size_));
     }

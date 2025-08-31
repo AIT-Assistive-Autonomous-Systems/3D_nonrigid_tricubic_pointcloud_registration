@@ -29,6 +29,7 @@ NamedColumnMatrix<Eigen::MatrixXd> ExtractMatrix(const pdal::PointViewPtr view,
 std::string PointcloudFieldsToString(const pdal::PointViewPtr view);
 
 // Save pointcloud to file
+// Updates only the x, y, and z coordinates; all other attributes remain unchanged
 void SaveMatrixToFile(const NamedColumnMatrix<Eigen::MatrixXd>& A, const std::string& path_in,
                       const std::string& path_out);
 

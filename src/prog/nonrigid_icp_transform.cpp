@@ -25,8 +25,9 @@ int main(int argc, char** argv) {
     spdlog::stopwatch sw;
     spdlog::info("Start of \"nonrigid-icp-transform\"");
 
-    spdlog::info("Create point cloud object");
+    spdlog::info("Read input point cloud \"{}\"", params.pc_in);
     auto X = ImportFileToMatrix(params.pc_in, false, false);
+    spdlog::info("  Input point cloud has {:d} points", X.rows());
 
     // Iterate over chunks of the point cloud
     long num_chunks = X.rows() / params.chunk_size + 1;
@@ -52,7 +53,7 @@ int main(int argc, char** argv) {
       X(row_indices, Eigen::all) = pc_mov_chunk.Xt();
     }
 
-    spdlog::info("Write transformed point cloud to file");
+    spdlog::info("Write transformed point cloud to file: \"{}\"", params.pc_out);
     SaveMatrixToFile(X, params.pc_in, params.pc_out);
 
     spdlog::info("Finished \"nonrigid-icp-transform\" in {:.3}s!", sw);

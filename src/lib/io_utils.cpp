@@ -39,12 +39,7 @@ NamedColumnMatrix<Eigen::MatrixXd> ImportFileToMatrix(const std::string& path,
   // Take first view from view set (contains the point cloud data)
   pdal::PointViewPtr view = *view_set.begin();
 
-  if (view->empty()) {
-    std::string error_string = "Point cloud is empty!";
-    throw std::runtime_error(error_string);
-  } else {
-    std::cout << "Read in pointcloud with " << view->size() << " points." << std::endl;
-  }
+  if (view->empty()) throw std::runtime_error("Point cloud is empty!");
 
   // Return 6D eigen matrix
   return ExtractMatrix(view, with_normals, with_correspondence_id);
@@ -202,18 +197,12 @@ void SaveMatrixToFile(const NamedColumnMatrix<Eigen::MatrixXd>& x_updated,
 
   // Take first view from view set (contains the point cloud data)
   pdal::PointViewPtr view = *view_set.begin();
-  if (view->empty()) {
-    std::string error_string = "Point cloud is empty!";
-    throw std::runtime_error(error_string);
-  } else {
-    std::cout << "Read in pointcloud with " << view->size() << " points." << std::endl;
-  }
+  if (view->empty()) throw std::runtime_error("Point cloud is empty!");
 
   // Update x,y,z fields of pointcloud with transformed values
   UpdateTransformedPointcloud(view, x_updated);
 
   // PDAL Writer
-  std::cout << "Write pointcloud to file: " << path_out << std::endl;
   pdal::Stage* writer = factory.createStage(pdal_writer_type);
   pdal::Options writer_options = CreatePDALWriterOptions(extension_out);
   writer_options.add("filename", path_out);
