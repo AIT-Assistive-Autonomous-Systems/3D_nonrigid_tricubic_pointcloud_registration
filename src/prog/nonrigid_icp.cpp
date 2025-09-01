@@ -31,6 +31,7 @@ struct Params {
   std::vector<double> grid_limits;
   uint32_t buffer_voxels;
   std::string matching_mode;
+  std::string error_metric;
   uint32_t num_correspondences;
   double max_euclidean_distance;
   uint32_t num_iterations;
@@ -133,7 +134,8 @@ int main(int argc, char** argv) {
           correspondences.point_to_plane_dists_t().std;
 
       Optimization optimization{};
-      iteration_results.optimization_results = Optimization::Solve(correspondences, params.weights);
+      iteration_results.optimization_results =
+          Optimization::Solve(correspondences, params.weights, params.error_metric);
 
       if (iteration_results.optimization_results.success) {
         iteration_results.correspondences_results.mean_point_to_plane_dists_after_optimization =
@@ -192,6 +194,9 @@ Params ParseUserInputs(int argc, char** argv) {
     "Matching mode for correspondences. Available modes are \"nn\" (nearest neighbor) and \"id\" "
     "(correspondence_id).",
     cxxopts::value<std::string>()->default_value("nn"))
+    ("r,error_metric",
+    "Error metric for optimization. Available metrics are \"point_to_plane\" (default) and \"point_to_point\".",
+    cxxopts::value<std::string>()->default_value("point_to_plane"))
     ("n,num_correspondences",
     "Number of correspondences",
     cxxopts::value<uint32_t>()->default_value("10000"))
@@ -236,6 +241,7 @@ Params ParseUserInputs(int argc, char** argv) {
   params.weights = result["weights"].as<std::vector<double>>();
   params.debug_dir = result["debug_dir"].as<std::string>();
   params.suppress_logging = result["suppress_logging"].as<bool>();
+  params.error_metric = result["error_metric"].as<std::string>();
 
   // Check parameter inputs
   if (params.suppress_logging) {
@@ -243,13 +249,21 @@ Params ParseUserInputs(int argc, char** argv) {
   }
 
   if (params.matching_mode == "id") {
-    params.num_iterations = 1;
-    spdlog::info("Set num_iterations to {:d} as matching mode \"{}\" was selected.",
-                 params.num_iterations, params.matching_mode.c_str());
+    if (params.num_iterations > 1) {
+      params.num_iterations = 1;
+      spdlog::info("Set num_iterations to {:d} as matching mode \"{}\" was selected.",
+                   params.num_iterations, params.matching_mode.c_str());
+    }
   }
 
   if (params.matching_mode != "nn" && params.matching_mode != "id") {
-    std::string error_string = "Matching mode \"" + params.matching_mode + "\" is not available!";
+    std::string error_string = "Matching mode must be either \"nn\" or \"id\"!";
+    throw std::runtime_error(error_string);
+  }
+
+  if (params.error_metric != "point_to_plane" && params.error_metric != "point_to_point") {
+    std::string error_string =
+        "Error metric must be either \"point_to_plane\" or \"point_to_point\"!";
     throw std::runtime_error(error_string);
   }
 

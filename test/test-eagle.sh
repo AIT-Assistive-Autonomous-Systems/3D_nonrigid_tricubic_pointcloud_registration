@@ -19,6 +19,7 @@ nonrigid-icp \
     --voxel_size 0.50 \
     --buffer_voxels 5 \
     --matching_mode id \
+    --error_metric point_to_point \
     --num_iterations 1 \
     --weights "0.01,0.01,0.01,0.01" \
     --max_euclidean_distance 10.0 \

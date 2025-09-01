@@ -3,7 +3,8 @@
 Optimization::Optimization() = default;
 
 OptimizationResults Optimization::Solve(Correspondences& correspondences,
-                                        const std::vector<double>& weights_zero_observations) {
+                                        const std::vector<double>& weights_zero_observations,
+                                        const std::string& error_metric) {
   OptimizationResults optimization_results{};  // returned
 
   CorrespondencesPointsWithAttributes X{correspondences.GetCorrespondences()};
@@ -35,24 +36,10 @@ OptimizationResults Optimization::Solve(Correspondences& correspondences,
   J_triplets.reserve(J_pc_mov_x_nx_triplets.size() + J_pc_mov_y_ny_triplets.size() +
                      J_pc_mov_z_nz_triplets.size() + J_direct_obs_triplets.size());
 
-  // clang-format off
-  Optimization::AddSubblockTriplets(0,
-                      0,
-                      J_pc_mov_x_nx_triplets,
-                      J_triplets);
-  Optimization::AddSubblockTriplets(0,
-                      0,
-                      J_pc_mov_y_ny_triplets,
-                      J_triplets);
-  Optimization::AddSubblockTriplets(0,
-                      0,
-                      J_pc_mov_z_nz_triplets,
-                      J_triplets);
-  Optimization::AddSubblockTriplets(X.num,
-                      0,
-                      J_direct_obs_triplets,
-                      J_triplets);
-  // clang-format on
+  Optimization::AddSubblockTriplets(0, 0, J_pc_mov_x_nx_triplets, J_triplets);
+  Optimization::AddSubblockTriplets(0, 0, J_pc_mov_y_ny_triplets, J_triplets);
+  Optimization::AddSubblockTriplets(0, 0, J_pc_mov_z_nz_triplets, J_triplets);
+  Optimization::AddSubblockTriplets(X.num, 0, J_direct_obs_triplets, J_triplets);
 
   Eigen::SparseMatrix<double> J(num_observations, num_unknowns);
   J.setFromTriplets(J_triplets.begin(), J_triplets.end());
@@ -85,7 +72,7 @@ OptimizationResults Optimization::Solve(Correspondences& correspondences,
   }
   optimization_results.success = true;
 
-  // auto v{J * xhat - l};
+  // auto residuals{J * xhat - l};
 
   // Save estimated unknowns to translation grids
   correspondences.pc_mov().x_translation_grid().UpdateAllGridValsFromVector(xhat);
