@@ -1,5 +1,4 @@
-#ifndef NAMED_COLUMN_MATRIX_H
-#define NAMED_COLUMN_MATRIX_H
+#pragma once
 
 #include <Eigen/Dense>
 #include <map>
@@ -66,5 +65,3 @@ class NamedColumnMatrix : public T {
 
   std::map<std::string, Eigen::Index> col_names_;
 };
-
-#endif  // NAMED_COLUMN_MATRIX_H

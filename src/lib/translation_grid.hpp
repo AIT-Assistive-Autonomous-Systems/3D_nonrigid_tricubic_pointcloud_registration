@@ -1,5 +1,4 @@
-#ifndef TRANSLATIONGRID_H
-#define TRANSLATIONGRID_H
+#pragma once
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -77,5 +76,3 @@ class TranslationGrid {
   int min_idx_adj_;
   int max_idx_adj_;
 };
-
-#endif  // TRANSLATIONGRID_H

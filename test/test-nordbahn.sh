@@ -3,15 +3,13 @@
 set -eu
 set -o pipefail
 
-source utils.sh
-
 cd test-nordbahn
 
 export PATH="../../bin:$PATH"
+export LD_LIBRARY_PATH=/usr/local/vcpkg/installed/x64-linux/lib
 
 mkdir -p results
 
-log "estimate transformation"
 nonrigid-icp \
     --fixed pcfix.las \
     --movable pcmov.las \
@@ -21,10 +19,11 @@ nonrigid-icp \
     --buffer_voxels 1 \
     --matching_mode nn \
     --num_iterations 5 \
-    --weights "0.1,0.1,0.1,0.1"
+    --weights "0.1,0.1,0.1,0.1" \
+    --profiling
 
-log "apply transformation"
 nonrigid-icp-transform \
     --pc_in pcmov.las \
     --pc_out results/pcmov_transformed.las \
-    --transform results/pcmov.nricp
+    --transform results/pcmov.nricp \
+    --profiling

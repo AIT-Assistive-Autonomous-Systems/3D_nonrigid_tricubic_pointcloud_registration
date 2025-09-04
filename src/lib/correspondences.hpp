@@ -1,5 +1,4 @@
-#ifndef CORRESPONDENCES_H_
-#define CORRESPONDENCES_H_
+#pragma once
 
 #include <algorithm>
 #include <fstream>
@@ -79,5 +78,3 @@ double Std(const Eigen::VectorXd& v);
 
 template <typename T>
 std::vector<T> Range(T start, T stop, T step = 1);
-
-#endif  // CORRESPONDENCES_H_

@@ -1,5 +1,4 @@
-#ifndef OPTIMIZATION_H_
-#define OPTIMIZATION_H_
+#pragma once
 
 #include <Eigen/Sparse>
 
@@ -25,5 +24,3 @@ class Optimization {
                                   const std::vector<Eigen::Triplet<double>>& subblock_triplets,
                                   std::vector<Eigen::Triplet<double>>& triplets);
 };
-
-#endif  // OPTIMIZATION_H_

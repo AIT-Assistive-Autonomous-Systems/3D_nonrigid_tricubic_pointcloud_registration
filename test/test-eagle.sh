@@ -3,15 +3,13 @@
 set -eu
 set -o pipefail
 
-source utils.sh
-
 cd test-eagle
 
 export PATH="../../bin:$PATH"
+export LD_LIBRARY_PATH=/usr/local/vcpkg/installed/x64-linux/lib
 
 mkdir -p results/debug
 
-log "estimate transformation"
 nonrigid-icp \
     --fixed pcfix.txt \
     --movable pcmov.txt \
@@ -23,10 +21,11 @@ nonrigid-icp \
     --weights "0.01,0.01,0.01,0.01" \
     --max_euclidean_distance 10.0 \
     --num_correspondences 10000 \
-    --debug_dir "results/debug"
+    --debug_dir "results/debug" \
+    --profiling
 
-log "apply transformation"
 nonrigid-icp-transform \
     --pc_in pcmov.txt \
     --pc_out results/pcmov_transformed.txt \
-    --transform results/pcmov.nricp
+    --transform results/pcmov.nricp \
+    --profiling

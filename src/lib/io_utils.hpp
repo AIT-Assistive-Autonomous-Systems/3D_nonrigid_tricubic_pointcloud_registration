@@ -1,5 +1,4 @@
-#ifndef IO_UTILS_H
-#define IO_UTILS_H
+#pragma once
 
 #include <Eigen/Dense>
 #include <filesystem>
@@ -45,5 +44,3 @@ pdal::Options CreatePDALWriterOptions(const std::string& extension);
 // Overwrite the transformed x,y,z coordinates to the original pointcloud
 void UpdateTransformedPointcloud(const pdal::PointViewPtr view,
                                  const NamedColumnMatrix<Eigen::MatrixXd>& x_updated);
-
-#endif  // IO_UTILS_H

@@ -7,6 +7,7 @@
 #include "src/lib/io_utils.hpp"
 #include "src/lib/named_column_matrix.hpp"
 #include "src/lib/optimization.hpp"
+#include "src/lib/profiler.hpp"
 #include "src/lib/pt_cloud.hpp"
 
 struct CorrespondencesResults {
@@ -37,6 +38,7 @@ struct Params {
   std::vector<double> weights;
   std::string debug_dir;
   bool suppress_logging;
+  bool profiling;
 };
 
 Params ParseUserInputs(int argc, char** argv);
@@ -49,9 +51,12 @@ int main(int argc, char** argv) {
 
     Params params = ParseUserInputs(argc, argv);
 
+    auto& profiler = Profiler::Instance();
+
     spdlog::stopwatch sw;
     spdlog::info("Start of \"nonrigid-icp\"");
 
+    if (params.profiling) profiler.Start("A.01 Create point cloud objects");
     spdlog::info("Create point cloud objects");
     auto X_fix =
         ImportFileToMatrix(params.fixed, true, params.matching_mode == "id" ? true : false);
@@ -71,7 +76,9 @@ int main(int argc, char** argv) {
     }
     spdlog::info("  Fixed point cloud has {:d} points", pc_fix.NumPts());
     spdlog::info("  Movable point cloud has {:d} points", pc_mov.NumPts());
+    if (params.profiling) profiler.Stop("A.01 Create point cloud objects");
 
+    if (params.profiling) profiler.Start("A.02 Initialization of translation grids");
     spdlog::info("Initialize x/y/z translation grids for movable point cloud");
     pc_mov.InitializeTranslationGrids(params.voxel_size, params.buffer_voxels, params.grid_limits);
     pc_mov.InitMatricesForUpdateXt();
@@ -95,12 +102,15 @@ int main(int argc, char** argv) {
             pc_mov.x_translation_grid().voxel_size() * pc_mov.x_translation_grid().z_num_voxels(),
         pc_mov.x_translation_grid().z_num_voxels());
     spdlog::info("  num_grid_vals = {:d}", pc_mov.x_translation_grid().num_grid_vals());
+    if (params.profiling) profiler.Stop("A.02 Initialization of translation grids");
 
+    if (params.profiling) profiler.Start("A.03 Selection of correspondences");
     spdlog::info("Selection of correspondences in fixed point cloud");
     Correspondences correspondences{pc_fix, pc_mov};
     correspondences.SelectPointsByRandomSampling(params.num_correspondences);
     auto idx_pc_fix{correspondences.GetSelectedPoints()};
     spdlog::info("Selected {:d} points in fixed point cloud", correspondences.num());
+    if (params.profiling) profiler.Stop("A.03 Selection of correspondences");
 
     auto debug_mode = (params.debug_dir != "");
 
@@ -109,6 +119,7 @@ int main(int argc, char** argv) {
     for (uint32_t it = 0; it < params.num_iterations; it++) {
       iteration_results.it = it + 1;
 
+      if (params.profiling) profiler.Start("A.04 Matching");
       correspondences.SetSelectedPoints(idx_pc_fix);
       if (params.matching_mode == "nn") {
         correspondences.MatchPointsByNearestNeighbor();
@@ -131,9 +142,12 @@ int main(int argc, char** argv) {
           correspondences.point_to_plane_dists_t().mean;
       iteration_results.correspondences_results.std_point_to_plane_dists_before_optimization =
           correspondences.point_to_plane_dists_t().std;
+      if (params.profiling) profiler.Stop("A.04 Matching");
 
+      if (params.profiling) profiler.Start("A.05 Optimization");
       Optimization optimization{};
       iteration_results.optimization_results = Optimization::Solve(correspondences, params.weights);
+      if (params.profiling) profiler.Stop("A.05 Optimization");
 
       if (iteration_results.optimization_results.success) {
         iteration_results.correspondences_results.mean_point_to_plane_dists_after_optimization =
@@ -146,10 +160,15 @@ int main(int argc, char** argv) {
       }
     }
 
+    if (params.profiling) profiler.Start("A.06 Export of translation grids");
     spdlog::info("Export of estimated translation grids to \"{}\"", params.transform);
     pc_mov.ExportTranslationGrids(params.transform);
+    if (params.profiling) profiler.Stop("A.06 Export of translation grids");
 
     spdlog::info("Finished \"nonrigid-icp\" in {:.3}s!", sw);
+
+    if (params.profiling && !params.suppress_logging) profiler.PrintSummary();
+
   } catch (const std::exception& e) {
     std::cerr << "Caught exception: " << e.what() << std::endl;
     return 1;
@@ -210,6 +229,9 @@ Params ParseUserInputs(int argc, char** argv) {
     ("s,suppress_logging",
     "Suppress log output",
     cxxopts::value<bool>()->default_value("false"))
+    ("p,profiling",
+    "Enable runtime profiling output (timing summary)",
+    cxxopts::value<bool>()->default_value("false"))
     ("h,help",
     "Print usage");
   // clang-format on
@@ -236,6 +258,7 @@ Params ParseUserInputs(int argc, char** argv) {
   params.weights = result["weights"].as<std::vector<double>>();
   params.debug_dir = result["debug_dir"].as<std::string>();
   params.suppress_logging = result["suppress_logging"].as<bool>();
+  params.profiling = result["profiling"].as<bool>();
 
   // Check parameter inputs
   if (params.suppress_logging) {

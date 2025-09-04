@@ -1,5 +1,4 @@
-#ifndef PTCLOUD_H
-#define PTCLOUD_H
+#pragma once
 
 #include <Eigen/Dense>
 #include <stdexcept>
@@ -65,5 +64,3 @@ struct HeaderInfo {
   int fileversion{1};
   const int length{1000};  // bytes
 };
-
-#endif  // PTCLOUD_H

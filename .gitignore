@@ -1,8 +1,10 @@
+.cache/
+.gitignore
+*.poly
 archived/
 bin/
 build/
 cmake-build*/
-test/test-nordbahn/results/
 test/test-eagle/results/
-*.poly
-.cache/
+test/test-mls-rail/*_preprocessed.*
+test/test-nordbahn/results/
