@@ -45,3 +45,55 @@ jobs:
           name: nonrigid-icp-linux
           path: artifacts/*
           if-no-files-found: error
+
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-2022
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}\\vcpkg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v4
+
+      - name: Setup vcpkg
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg "$env:VCPKG_ROOT"
+          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+
+      - name: Install dependencies with vcpkg
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_ROOT\vcpkg.exe" install eigen3 spdlog pdal nanoflann cxxopts --triplet x64-windows
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}\\scripts\\buildsystems\\vcpkg.cmake"
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake --build build --config Release -- -v
+
+      - name: Test
+        shell: pwsh
+        run: |
+          ctest --test-dir build --output-on-failure | cat
+
+      - name: Collect artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          if (Test-Path "bin/nonrigid-icp.exe") { Copy-Item "bin/nonrigid-icp.exe" "artifacts/nonrigid-icp.exe" }
+          if (Test-Path "bin/nonrigid-icp-transform.exe") { Copy-Item "bin/nonrigid-icp-transform.exe" "artifacts/nonrigid-icp-transform.exe" }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonrigid-icp-windows
+          path: artifacts/*
+          if-no-files-found: error
