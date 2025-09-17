@@ -51,7 +51,6 @@ jobs:
     runs-on: windows-2022
     env:
       VCPKG_ROOT: ${{ github.workspace }}\\vcpkg
-      VCPKG_DEFAULT_TRIPLET: x64-windows-static
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,12 +68,12 @@ jobs:
         shell: pwsh
         run: |
           # Install PDAL with minimal 'core' feature to avoid 'draco' dependency on Windows
-          & "$env:VCPKG_ROOT\vcpkg.exe" install eigen3 spdlog "pdal[core]" nanoflann cxxopts --triplet $env:VCPKG_DEFAULT_TRIPLET
+          & "$env:VCPKG_ROOT\vcpkg.exe" install eigen3 spdlog "pdal[core]" nanoflann cxxopts --triplet x64-windows
 
       - name: Configure
         shell: pwsh
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}\\scripts\\buildsystems\\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=$env:VCPKG_DEFAULT_TRIPLET
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}\\scripts\\buildsystems\\vcpkg.cmake"
 
       - name: Build
         shell: pwsh
