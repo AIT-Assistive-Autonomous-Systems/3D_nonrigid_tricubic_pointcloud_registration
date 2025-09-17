@@ -1,0 +1,47 @@
+name: CI Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-linux:
+    name: Build on Ubuntu
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config \
+            libeigen3-dev libspdlog-dev libpdal-dev pdal \
+            libnanoflann-dev libcxxopts-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release -- -v
+
+      - name: Test
+        run: |
+          ctest --test-dir build --output-on-failure | cat
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          cp -v bin/nonrigid-icp artifacts/nonrigid-icp || true
+          cp -v bin/nonrigid-icp-transform artifacts/nonrigid-icp-transform || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonrigid-icp-linux
+          path: artifacts/*
+          if-no-files-found: error
