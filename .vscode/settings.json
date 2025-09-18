@@ -1,4 +1,7 @@
 {
   "files.associations": {},
-  "cmake.debugConfig": {}
+  "cmake.debugConfig": {},
+  "cmake.configureSettings": {
+    "CMAKE_TOOLCHAIN_FILE": "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake"
+  }
 }
