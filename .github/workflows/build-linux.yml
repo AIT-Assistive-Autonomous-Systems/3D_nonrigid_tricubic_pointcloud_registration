@@ -41,8 +41,10 @@ jobs:
           pkgs: eigen3 spdlog nanoflann pdal cxxopts
           triplet: x64-linux-release
           cache-key: ubuntu-24.04-eigen3-spdlog-nanoflann-pdal-cxxopts
-          revision: 2024.09.30  # Pin to stable release for better cache hits
+          revision: 2024.09.30 # Pin to stable release for better cache hits
           token: ${{ github.token }}
+        env:
+          VCPKG_FEATURE_FLAGS: -manifests
 
       - name: Configure CMake
         run: |
@@ -67,7 +69,7 @@ jobs:
           # Extract AppImage tools to avoid FUSE issues in CI
           ./appimagetool-x86_64.AppImage --appimage-extract
           ./linuxdeploy-x86_64.AppImage --appimage-extract
-          
+
           # Create symlinks for easier use
           ln -sf squashfs-root/AppRun appimagetool
           ln -sf squashfs-root-linuxdeploy/AppRun linuxdeploy
