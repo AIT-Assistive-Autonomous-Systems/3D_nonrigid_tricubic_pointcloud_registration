@@ -76,7 +76,7 @@ class Profiler {
           durations.size()};
       double stddev{std::sqrt(variance)};
 
-      std::printf("%-60s | %10lu | %10.1f | %10.1f | %10.1f | %10.1f\n", section.c_str(),
+      std::printf("%-60s | %10zu | %10.1f | %10.1f | %10.1f | %10.1f\n", section.c_str(),
                   durations.size(), min_time, max_time, mean, stddev);
     }
     std::printf("%s\n", std::string(125, '-').c_str());
