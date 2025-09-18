@@ -10,6 +10,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    env:
+      # Enable and configure vcpkg binary caching to speed up subsequent runs
+      VCPKG_BINARY_SOURCES: "clear;files,$HOME/.cache/vcpkg-bincache,readwrite"
+      # (Optional) Enable feature flags explicitly if needed
+      VCPKG_FEATURE_FLAGS: binarycaching
+      # CCache directory
+      CCACHE_DIR: $HOME/.cache/ccache
 
     steps:
       - name: Checkout repository
@@ -30,22 +37,42 @@ jobs:
             pkg-config \
             bison \
             flex \
-            git-lfs
+            git-lfs \
+            ccache
 
-      - name: vcpkg build
+      - name: Cache vcpkg binary artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/vcpkg-bincache
+          key: vcpkg-bincache-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-bincache-${{ runner.os }}-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+
+      - name: vcpkg build (manifest mode)
         uses: johnwason/vcpkg-action@v7
         id: vcpkg
         with:
-          pkgs: eigen3 spdlog nanoflann pdal cxxopts
+          manifest-dir: ${{ github.workspace }}
           triplet: x64-linux-release
           cache-key: ubuntu-24.04
           token: ${{ github.token }}
+          # Optionally pin a revision for reproducibility:
+          # revision: master
 
       - name: Configure CMake
         run: |
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
 
       - name: Build

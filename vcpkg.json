@@ -1,0 +1,11 @@
+{
+  "name": "nonrigid-icp",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "eigen3",
+    "spdlog",
+    "nanoflann",
+    "cxxopts",
+    "pdal"
+  ]
+}
