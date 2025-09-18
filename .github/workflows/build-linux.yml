@@ -38,13 +38,11 @@ jobs:
         uses: johnwason/vcpkg-action@v7
         id: vcpkg
         with:
-          pkgs: eigen3 spdlog nanoflann pdal cxxopts
+          manifest-dir: ${{ github.workspace }}
           triplet: x64-linux-release
           cache-key: ubuntu-24.04-eigen3-spdlog-nanoflann-pdal-cxxopts
           revision: 2024.09.30 # Pin to stable release for better cache hits
           token: ${{ github.token }}
-        env:
-          VCPKG_FEATURE_FLAGS: -manifests
 
       - name: Configure CMake
         run: |
