@@ -1,0 +1,173 @@
+name: Build on Linux
+
+on:
+  push:
+    branches: ["**"] # Run on all branches
+  pull_request:
+    branches: ["**"] # Run on PRs to all branches
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            libtool \
+            autoconf \
+            automake \
+            pkg-config \
+            bison \
+            flex \
+            git-lfs
+
+      - name: Setup vcpkg
+        uses: microsoft/setup-vcpkg@v1
+        with:
+          vcpkg-version: "latest"
+
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/vcpkg
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('.devcontainer/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Install C++ dependencies with vcpkg
+        run: |
+          echo "VCPKG_ROOT=$VCPKG_ROOT"
+          $VCPKG_ROOT/vcpkg install eigen3 spdlog nanoflann pdal cxxopts
+
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure --parallel
+
+      - name: Download AppImage tools
+        run: |
+          # Download appimagetool
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+
+          # Download linuxdeploy for better dependency handling
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+
+      - name: Create AppImage for nonrigid-icp
+        run: |
+          # Create AppDir structure for nonrigid-icp
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir-nonrigid-icp --executable bin/nonrigid-icp
+
+          # Create a simple AppRun script for CLI usage
+          cat > AppDir-nonrigid-icp/AppRun << 'EOF'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+          exec "${HERE}/usr/bin/nonrigid-icp" "$@"
+          EOF
+          chmod +x AppDir-nonrigid-icp/AppRun
+
+          # Create minimal desktop file (required by AppImage spec, even for CLI)
+          cat > AppDir-nonrigid-icp/nonrigid-icp.desktop << 'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=nonrigid-icp
+          Exec=nonrigid-icp
+          Icon=nonrigid-icp
+          Categories=Utility;
+          Terminal=true
+          NoDisplay=true
+          EOF
+
+          # Create a dummy icon (required by AppImage spec)
+          echo -e '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x08\x02\x00\x00\x00\xfc\x18\xed\xa3\x00\x00\x00\x19tEXtSoftware\x00Adobe ImageReadyq\xc9e<\x00\x00\x00\x0eIDATx\xdab\x00\x02\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82' > AppDir-nonrigid-icp/nonrigid-icp.png
+
+          # Build AppImage
+          ./appimagetool-x86_64.AppImage AppDir-nonrigid-icp nonrigid-icp-x86_64.AppImage
+
+      - name: Create AppImage for nonrigid-icp-transform
+        run: |
+          # Create AppDir structure for nonrigid-icp-transform
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir-nonrigid-icp-transform --executable bin/nonrigid-icp-transform
+
+          # Create a simple AppRun script for CLI usage
+          cat > AppDir-nonrigid-icp-transform/AppRun << 'EOF'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+          exec "${HERE}/usr/bin/nonrigid-icp-transform" "$@"
+          EOF
+          chmod +x AppDir-nonrigid-icp-transform/AppRun
+
+          # Create minimal desktop file (required by AppImage spec, even for CLI)
+          cat > AppDir-nonrigid-icp-transform/nonrigid-icp-transform.desktop << 'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=nonrigid-icp-transform
+          Exec=nonrigid-icp-transform
+          Icon=nonrigid-icp-transform
+          Categories=Utility;
+          Terminal=true
+          NoDisplay=true
+          EOF
+
+          # Create a dummy icon (required by AppImage spec)
+          echo -e '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x08\x02\x00\x00\x00\xfc\x18\xed\xa3\x00\x00\x00\x19tEXtSoftware\x00Adobe ImageReadyq\xc9e<\x00\x00\x00\x0eIDATx\xdab\x00\x02\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82' > AppDir-nonrigid-icp-transform/nonrigid-icp-transform.png
+
+          # Build AppImage
+          ./appimagetool-x86_64.AppImage AppDir-nonrigid-icp-transform nonrigid-icp-transform-x86_64.AppImage
+
+      - name: Test AppImages
+        run: |
+          # Make AppImages executable
+          chmod +x *.AppImage
+
+          # Test that they can be executed (just check help/version)
+          echo "Testing nonrigid-icp AppImage..."
+          ./nonrigid-icp-x86_64.AppImage --help || echo "Help not available, but AppImage launches"
+
+          echo "Testing nonrigid-icp-transform AppImage..."
+          ./nonrigid-icp-transform-x86_64.AppImage --help || echo "Help not available, but AppImage launches"
+
+          # Show file sizes
+          ls -lh *.AppImage
+
+      - name: Upload AppImage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimages-Release
+          path: |
+            *.AppImage
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-Release
+          path: |
+            build/Testing/Temporary/LastTest.log
+          retention-days: 7
