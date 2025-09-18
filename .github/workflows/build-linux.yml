@@ -164,5 +164,6 @@ jobs:
         with:
           name: linux-appimages-Release
           path: |
-            *.AppImage
+            nonrigid-icp-x86_64.AppImage
+            nonrigid-icp-transform-x86_64.AppImage
           retention-days: 7
