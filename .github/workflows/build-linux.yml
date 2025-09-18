@@ -65,12 +65,20 @@ jobs:
           chmod +x linuxdeploy-x86_64.AppImage
 
           # Extract AppImage tools to avoid FUSE issues in CI
-          ./appimagetool-x86_64.AppImage --appimage-extract
-          ./linuxdeploy-x86_64.AppImage --appimage-extract
+          ./appimagetool-x86_64.AppImage --appimage-extract >/dev/null
+          mv squashfs-root appimagetool-extracted
+          
+          ./linuxdeploy-x86_64.AppImage --appimage-extract >/dev/null
+          mv squashfs-root linuxdeploy-extracted
 
-          # Create symlinks for easier use
-          ln -sf squashfs-root/AppRun appimagetool
-          ln -sf squashfs-root-linuxdeploy/AppRun linuxdeploy
+          # Create wrapper scripts for easier use
+          echo '#!/bin/bash' > appimagetool
+          echo 'exec "$(dirname "$0")/appimagetool-extracted/AppRun" "$@"' >> appimagetool
+          chmod +x appimagetool
+          
+          echo '#!/bin/bash' > linuxdeploy
+          echo 'exec "$(dirname "$0")/linuxdeploy-extracted/AppRun" "$@"' >> linuxdeploy
+          chmod +x linuxdeploy
 
       - name: Create AppImage for nonrigid-icp
         run: |
