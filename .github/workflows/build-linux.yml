@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
@@ -40,7 +40,7 @@ jobs:
         with:
           manifest-dir: ${{ github.workspace }}
           triplet: x64-linux-release
-          cache-key: ubuntu-24.04-eigen3-spdlog-nanoflann-pdal-cxxopts
+          cache-key: ubuntu-22.04-eigen3-spdlog-nanoflann-pdal-cxxopts
           revision: 2024.09.30 # Pin to stable release for better cache hits
           token: ${{ github.token }}
 
@@ -67,7 +67,7 @@ jobs:
           # Extract AppImage tools to avoid FUSE issues in CI
           ./appimagetool-x86_64.AppImage --appimage-extract >/dev/null
           mv squashfs-root appimagetool-extracted
-          
+
           ./linuxdeploy-x86_64.AppImage --appimage-extract >/dev/null
           mv squashfs-root linuxdeploy-extracted
 
@@ -75,7 +75,7 @@ jobs:
           echo '#!/bin/bash' > appimagetool
           echo 'exec "$(dirname "$0")/appimagetool-extracted/AppRun" "$@"' >> appimagetool
           chmod +x appimagetool
-          
+
           echo '#!/bin/bash' > linuxdeploy
           echo 'exec "$(dirname "$0")/linuxdeploy-extracted/AppRun" "$@"' >> linuxdeploy
           chmod +x linuxdeploy
