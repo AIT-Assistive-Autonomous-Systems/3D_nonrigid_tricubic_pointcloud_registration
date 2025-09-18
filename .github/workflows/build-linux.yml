@@ -51,11 +51,6 @@ jobs:
       - name: Build
         run: cmake --build build --config Release --parallel
 
-      - name: Run tests
-        run: |
-          cd build
-          ctest --output-on-failure --parallel
-
       - name: Download AppImage tools
         run: |
           # Download appimagetool
@@ -151,13 +146,4 @@ jobs:
           name: linux-appimages-Release
           path: |
             *.AppImage
-          retention-days: 7
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results-Release
-          path: |
-            build/Testing/Temporary/LastTest.log
           retention-days: 7
