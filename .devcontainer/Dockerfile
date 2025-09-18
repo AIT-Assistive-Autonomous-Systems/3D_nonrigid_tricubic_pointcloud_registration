@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/cpp:1-ubuntu-24.04
+FROM mcr.microsoft.com/devcontainers/cpp:1-ubuntu-22.04
 
 # Install system packages via apt
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -12,5 +12,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     bison \
     flex
 
-# Install C++ dependencies via vcpkg
-RUN su vscode -c "${VCPKG_ROOT}/vcpkg install eigen3 spdlog nanoflann pdal cxxopts"
+# Install C++ dependencies via vcpkg using vcpkg.json
+COPY vcpkg.json /tmp/vcpkg.json
+RUN su vscode -c "cd /tmp && ${VCPKG_ROOT}/vcpkg install"

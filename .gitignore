@@ -8,3 +8,4 @@ cmake-build*/
 test/test-eagle/results/
 test/test-mls-rail/*_preprocessed.*
 test/test-nordbahn/results/
+.devcontainer/vcpkg.json

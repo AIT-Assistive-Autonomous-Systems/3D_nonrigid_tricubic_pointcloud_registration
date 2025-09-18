@@ -21,5 +21,6 @@
       ]
     }
   },
-  "remoteUser": "ubuntu"
+  "initializeCommand": "cp vcpkg.json .devcontainer/vcpkg.json",
+  "remoteUser": "vscode"
 }
