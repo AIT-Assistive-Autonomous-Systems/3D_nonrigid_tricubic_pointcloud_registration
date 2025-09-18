@@ -32,31 +32,21 @@ jobs:
             flex \
             git-lfs
 
-      - name: Setup vcpkg
-        uses: microsoft/setup-vcpkg@v1
+      - name: vcpkg build
+        uses: johnwason/vcpkg-action@v7
+        id: vcpkg
         with:
-          vcpkg-version: "latest"
-
-      - name: Cache vcpkg packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/vcpkg
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('.devcontainer/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
-      - name: Install C++ dependencies with vcpkg
-        run: |
-          echo "VCPKG_ROOT=$VCPKG_ROOT"
-          $VCPKG_ROOT/vcpkg install eigen3 spdlog nanoflann pdal cxxopts
+          pkgs: eigen3 spdlog nanoflann pdal cxxopts
+          triplet: x64-linux-release
+          cache-key: ubuntu-24.04
+          token: ${{ github.token }}
 
       - name: Configure CMake
         run: |
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+            ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
 
       - name: Build
         run: cmake --build build --config Release --parallel
