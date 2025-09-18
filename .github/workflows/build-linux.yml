@@ -10,13 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    env:
-      # Enable and configure vcpkg binary caching to speed up subsequent runs
-      VCPKG_BINARY_SOURCES: "clear;files,$HOME/.cache/vcpkg-bincache,readwrite"
-      # (Optional) Enable feature flags explicitly if needed
-      VCPKG_FEATURE_FLAGS: binarycaching
-      # CCache directory
-      CCACHE_DIR: $HOME/.cache/ccache
 
     steps:
       - name: Checkout repository
@@ -38,41 +31,24 @@ jobs:
             bison \
             flex \
             git-lfs \
-            ccache
+            fuse \
+            libfuse2
 
-      - name: Cache vcpkg binary artifacts
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/vcpkg-bincache
-          key: vcpkg-bincache-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-bincache-${{ runner.os }}-
-
-      - name: Cache ccache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ccache
-          key: ccache-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
-          restore-keys: |
-            ccache-${{ runner.os }}-
-
-      - name: vcpkg build (manifest mode)
+      - name: vcpkg build
         uses: johnwason/vcpkg-action@v7
         id: vcpkg
         with:
-          manifest-dir: ${{ github.workspace }}
+          pkgs: eigen3 spdlog nanoflann pdal cxxopts
           triplet: x64-linux-release
-          cache-key: ubuntu-24.04
+          cache-key: ubuntu-24.04-eigen3-spdlog-nanoflann-pdal-cxxopts
+          revision: 2024.09.30  # Pin to stable release for better cache hits
           token: ${{ github.token }}
-          # Optionally pin a revision for reproducibility:
-          # revision: master
 
       - name: Configure CMake
         run: |
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
 
       - name: Build
@@ -88,10 +64,18 @@ jobs:
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
 
+          # Extract AppImage tools to avoid FUSE issues in CI
+          ./appimagetool-x86_64.AppImage --appimage-extract
+          ./linuxdeploy-x86_64.AppImage --appimage-extract
+          
+          # Create symlinks for easier use
+          ln -sf squashfs-root/AppRun appimagetool
+          ln -sf squashfs-root-linuxdeploy/AppRun linuxdeploy
+
       - name: Create AppImage for nonrigid-icp
         run: |
           # Create AppDir structure for nonrigid-icp
-          ./linuxdeploy-x86_64.AppImage --appdir AppDir-nonrigid-icp --executable bin/nonrigid-icp
+          ./linuxdeploy --appdir AppDir-nonrigid-icp --executable bin/nonrigid-icp
 
           # Create a simple AppRun script for CLI usage
           cat > AppDir-nonrigid-icp/AppRun << 'EOF'
@@ -117,13 +101,13 @@ jobs:
           # Create a dummy icon (required by AppImage spec)
           echo -e '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x08\x02\x00\x00\x00\xfc\x18\xed\xa3\x00\x00\x00\x19tEXtSoftware\x00Adobe ImageReadyq\xc9e<\x00\x00\x00\x0eIDATx\xdab\x00\x02\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82' > AppDir-nonrigid-icp/nonrigid-icp.png
 
-          # Build AppImage
-          ./appimagetool-x86_64.AppImage AppDir-nonrigid-icp nonrigid-icp-x86_64.AppImage
+          # Build AppImage using extracted appimagetool
+          ./appimagetool --no-appstream AppDir-nonrigid-icp nonrigid-icp-x86_64.AppImage
 
       - name: Create AppImage for nonrigid-icp-transform
         run: |
           # Create AppDir structure for nonrigid-icp-transform
-          ./linuxdeploy-x86_64.AppImage --appdir AppDir-nonrigid-icp-transform --executable bin/nonrigid-icp-transform
+          ./linuxdeploy --appdir AppDir-nonrigid-icp-transform --executable bin/nonrigid-icp-transform
 
           # Create a simple AppRun script for CLI usage
           cat > AppDir-nonrigid-icp-transform/AppRun << 'EOF'
@@ -149,8 +133,8 @@ jobs:
           # Create a dummy icon (required by AppImage spec)
           echo -e '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x08\x02\x00\x00\x00\xfc\x18\xed\xa3\x00\x00\x00\x19tEXtSoftware\x00Adobe ImageReadyq\xc9e<\x00\x00\x00\x0eIDATx\xdab\x00\x02\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82' > AppDir-nonrigid-icp-transform/nonrigid-icp-transform.png
 
-          # Build AppImage
-          ./appimagetool-x86_64.AppImage AppDir-nonrigid-icp-transform nonrigid-icp-transform-x86_64.AppImage
+          # Build AppImage using extracted appimagetool
+          ./appimagetool --no-appstream AppDir-nonrigid-icp-transform nonrigid-icp-transform-x86_64.AppImage
 
       - name: Test AppImages
         run: |
