@@ -2,6 +2,7 @@
 #include <spdlog/stopwatch.h>
 
 #include <cxxopts.hpp>
+#include <algorithm>
 
 #include "src/lib/io_utils.hpp"
 #include "src/lib/profiler.hpp"
@@ -37,15 +38,21 @@ int main(int argc, char** argv) {
 
     // Iterate over chunks of the point cloud
     if (params.profiling) profiler.Start("A.02 Transformation of point cloud");
-    long num_chunks = X.rows() / params.chunk_size + 1;
-    for (long i = 0; i < X.rows(); i += params.chunk_size) {
-      spdlog::info("Transforming point cloud chunk {:d}/{:d} ...", i / params.chunk_size + 1,
-                   num_chunks);
+    using Index = Eigen::Index;
+    Index total_rows = X.rows();
+    Index chunk_size = static_cast<Index>(params.chunk_size);
+    if (chunk_size <= 0) {
+      spdlog::error("Chunk size must be positive (got {:d})", params.chunk_size);
+      return 1;
+    }
+    Index num_chunks = (total_rows + chunk_size - 1) / chunk_size; // ceil division
+    for (Index i = 0; i < total_rows; i += chunk_size) {
+      spdlog::info("Transforming point cloud chunk {:d}/{:d} ...", static_cast<long long>(i / chunk_size + 1),
+                   static_cast<long long>(num_chunks));
 
       // Row indices
-      long first_row{i};
-  // Use (std::min) to avoid interference from potential Windows min macro
-  long last_row{(std::min)(i + params.chunk_size, X.rows())};
+      Index first_row = i;
+      Index last_row = (std::min)(i + chunk_size, total_rows); // (std::min) to avoid macro issues
       auto row_indices = Eigen::seq(first_row, last_row - 1);
 
       // Transform points in chunk
