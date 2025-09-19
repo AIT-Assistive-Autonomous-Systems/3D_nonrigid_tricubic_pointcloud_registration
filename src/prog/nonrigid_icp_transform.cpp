@@ -44,7 +44,8 @@ int main(int argc, char** argv) {
 
       // Row indices
       long first_row{i};
-      long last_row{std::min(i + params.chunk_size, X.rows())};
+  // Use (std::min) to avoid interference from potential Windows min macro
+  long last_row{(std::min)(i + params.chunk_size, X.rows())};
       auto row_indices = Eigen::seq(first_row, last_row - 1);
 
       // Transform points in chunk

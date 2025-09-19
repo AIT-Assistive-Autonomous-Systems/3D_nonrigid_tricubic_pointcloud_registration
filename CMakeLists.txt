@@ -4,6 +4,11 @@ project(tricubic_interpolation)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Avoid Windows headers defining min/max macros that conflict with std::min/std::max
+if (WIN32)
+    add_compile_definitions(NOMINMAX)
+endif()
+
 # Add compiler warnings for GCC and Clang
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3")
