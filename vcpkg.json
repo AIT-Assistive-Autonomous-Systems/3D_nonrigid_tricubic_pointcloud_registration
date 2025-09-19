@@ -5,11 +5,6 @@
     "eigen3",
     "spdlog",
     "nanoflann",
-    {
-      "name": "pdal",
-      "default-features": false,
-      "features": []
-    },
     "cxxopts"
   ]
 }

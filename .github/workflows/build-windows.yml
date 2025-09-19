@@ -2,19 +2,17 @@ name: Build on Windows
 
 on:
   push:
-    branches: ["**"] # Run on all branches
-    tags: ["v*"] # Run on version tags
+    branches: ["**"]
+    tags: ["v*"]
   pull_request:
-    branches: ["**"] # Run on PRs to all branches
-  workflow_dispatch: # Allow manual triggering
+    branches: ["**"]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-2022
     env:
-      # Short absolute path used to avoid long path issues when libtool passes paths to cl.exe (libiconv build)
       SHORT_WS: C:\w
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,9 +24,6 @@ jobs:
         run: |
           if exist %SHORT_WS% rmdir %SHORT_WS%
           mklink /J %SHORT_WS% %GITHUB_WORKSPACE%
-        # After this, the full project (and vcpkg manifest) is reachable via C:\w which keeps subsequent
-        # vcpkg build/install/package paths well below MAX_PATH so libtool does not emit //?/ extended paths
-        # that MSVC's cl.exe mis-parses as options.
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -37,12 +32,31 @@ jobs:
         uses: johnwason/vcpkg-action@v7
         id: vcpkg
         with:
-          # Use the short junction path so all internal vcpkg build paths are minimized
           manifest-dir: ${{ env.SHORT_WS }}
           triplet: x64-windows
-          cache-key: windows-2022-eigen3-spdlog-nanoflann-pdal-cxxopts
-          # revision: 2024.12.16 # Pin to stable release for better cache hits
+          cache-key: windows-2022-eigen3-spdlog-nanoflann-cxxopts
           token: ${{ github.token }}
+
+      - name: Set up Miniconda (for PDAL)
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          activate-environment: pdal-env
+          python-version: 3.11
+          channels: conda-forge
+          channel-priority: strict
+
+      - name: Install PDAL via conda
+        shell: bash -l {0}
+        run: |
+          echo "Conda info before install:"
+          conda info
+          conda install -y pdal
+          echo "PDAL version:"
+          pdal --version || true
+          echo "Listing PDAL related libs:"
+          ls -1 "$CONDA_PREFIX/Library/bin" 2>/dev/null | grep -i pdal || true
+          echo "CONDA_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
 
       - name: Upload vcpkg logs on failure
         if: failure() && steps.vcpkg.outcome == 'failure'
@@ -56,8 +70,12 @@ jobs:
 
       - name: Configure CMake
         working-directory: ${{ env.SHORT_WS }}
+        shell: powershell
         run: |
-          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
+          Write-Host "Using CONDA_PREFIX=$env:CONDA_PREFIX"
+          $pdalDir = Join-Path $env:CONDA_PREFIX 'Library' 'lib' 'cmake' 'PDAL'
+          if (-Not (Test-Path $pdalDir)) { Write-Host "Warning: PDAL config not found: $pdalDir" } else { Write-Host "Found PDAL config at $pdalDir" }
+          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DPDAL_DIR="$pdalDir" ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
 
       - name: Build
         working-directory: ${{ env.SHORT_WS }}
@@ -79,87 +97,42 @@ jobs:
         shell: powershell
         working-directory: ${{ env.SHORT_WS }}
         run: |
-          # Function to get dependencies recursively
           function Get-Dependencies {
-              param($FilePath, $ProcessedFiles, $DistBinPath, $VcpkgBinPath)
-
-              if ($ProcessedFiles -contains $FilePath) {
-                  return
+            param($FilePath, $ProcessedFiles, $DistBinPath, $VcpkgBinPath)
+            if ($ProcessedFiles -contains $FilePath) { return }
+            $ProcessedFiles.Add($FilePath) | Out-Null
+            Write-Host "Processing: $FilePath"
+            $dumpbinPath = Get-ChildItem "C:\Program Files\Microsoft Visual Studio\2022\*\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" | Select-Object -First 1
+            if (-not $dumpbinPath) { Write-Host "Warning: dumpbin.exe not found"; return }
+            $deps = & $dumpbinPath.FullName /dependents $FilePath 2>$null | Select-String "\.dll" | ForEach-Object { $_.Line.Trim() }
+            foreach ($dep in $deps) {
+              if ($dep -match "^\s*([a-zA-Z0-9_\-\.]+\.dll)\s*$") {
+                $dllName = $matches[1]
+                if ($dllName -match "^(kernel32|user32|gdi32|winspool|comdlg32|advapi32|shell32|ole32|oleaut32|uuid|odbc32|odbccp32|msvcrt|vcruntime|api-ms-|ucrtbase|msvcp)") { continue }
+                $vcpkgDllPath = Join-Path $VcpkgBinPath $dllName
+                $distDllPath = Join-Path $DistBinPath $dllName
+                if (Test-Path $vcpkgDllPath) {
+                  if (-not (Test-Path $distDllPath)) { Write-Host "Copying dependency (vcpkg): $dllName"; Copy-Item $vcpkgDllPath $DistBinPath }
+                  Get-Dependencies -FilePath $distDllPath -ProcessedFiles $ProcessedFiles -DistBinPath $DistBinPath -VcpkgBinPath $VcpkgBinPath
+                } else {
+                  if ($condaBinPath -and (Test-Path (Join-Path $condaBinPath $dllName))) {
+                    if (-not (Test-Path $distDllPath)) { Write-Host "Copying dependency (conda): $dllName"; Copy-Item (Join-Path $condaBinPath $dllName) $DistBinPath }
+                    Get-Dependencies -FilePath $distDllPath -ProcessedFiles $ProcessedFiles -DistBinPath $DistBinPath -VcpkgBinPath $VcpkgBinPath
+                  } else { Write-Host "Warning: Could not find $dllName in vcpkg or conda paths" }
+                }
               }
-              $ProcessedFiles.Add($FilePath) | Out-Null
-
-              Write-Host "Processing: $FilePath"
-
-              # Get dependencies using dumpbin - find the correct path
-              $dumpbinPath = Get-ChildItem "C:\Program Files\Microsoft Visual Studio\2022\*\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" | Select-Object -First 1
-              if (-not $dumpbinPath) {
-                  Write-Host "Warning: dumpbin.exe not found, skipping dependency analysis for $FilePath"
-                  return
-              }
-
-              $deps = & $dumpbinPath.FullName /dependents $FilePath 2>$null |
-                      Select-String "\.dll" |
-                      ForEach-Object { $_.Line.Trim() }
-
-              foreach ($dep in $deps) {
-                  if ($dep -match "^\s*([a-zA-Z0-9_\-\.]+\.dll)\s*$") {
-                      $dllName = $matches[1]
-
-                      # Skip system DLLs
-                      if ($dllName -match "^(kernel32|user32|gdi32|winspool|comdlg32|advapi32|shell32|ole32|oleaut32|uuid|odbc32|odbccp32|msvcrt|vcruntime|api-ms-|ucrtbase|msvcp)") {
-                          continue
-                      }
-
-                      # Look for the DLL in vcpkg installed directory
-                      $vcpkgDllPath = Join-Path $VcpkgBinPath $dllName
-                      $distDllPath = Join-Path $DistBinPath $dllName
-
-                      if (Test-Path $vcpkgDllPath) {
-                          if (-not (Test-Path $distDllPath)) {
-                              Write-Host "Copying dependency: $dllName"
-                              Copy-Item $vcpkgDllPath $DistBinPath
-
-                              # Recursively process this DLL's dependencies
-                              Get-Dependencies -FilePath $distDllPath -ProcessedFiles $ProcessedFiles -DistBinPath $DistBinPath -VcpkgBinPath $VcpkgBinPath
-                          }
-                      } else {
-                          Write-Host "Warning: Could not find $dllName in vcpkg directory"
-                      }
-                  }
-              }
+            }
           }
-
-          # Initialize
           $processedFiles = New-Object System.Collections.Generic.HashSet[string]
           $vcpkgBinPath = "build\vcpkg_installed\x64-windows\bin"
           $distBinPath = "dist\bin"
-
+          $condaBinPath = if ($env:CONDA_PREFIX) { Join-Path $env:CONDA_PREFIX 'Library' 'bin' } else { $null }
           Write-Host "vcpkg bin path: $vcpkgBinPath"
+          Write-Host "conda bin path: $condaBinPath"
           Write-Host "Distribution bin path: $distBinPath"
-
-          # List available DLLs in vcpkg
-          Write-Host "Available DLLs in vcpkg:"
-          if (Test-Path $vcpkgBinPath) {
-              Get-ChildItem $vcpkgBinPath -Filter "*.dll" | ForEach-Object { Write-Host "  $($_.Name)" }
-          } else {
-              Write-Host "Warning: vcpkg bin path not found: $vcpkgBinPath"
-          }
-
-          # Process each executable
-          if (Test-Path "dist\bin\nonrigid-icp.exe") {
-              Get-Dependencies -FilePath "dist\bin\nonrigid-icp.exe" -ProcessedFiles $processedFiles -DistBinPath $distBinPath -VcpkgBinPath $vcpkgBinPath
-          } else {
-              Write-Host "Warning: nonrigid-icp.exe not found in dist\bin\"
-          }
-
-          if (Test-Path "dist\bin\nonrigid-icp-transform.exe") {
-              Get-Dependencies -FilePath "dist\bin\nonrigid-icp-transform.exe" -ProcessedFiles $processedFiles -DistBinPath $distBinPath -VcpkgBinPath $vcpkgBinPath
-          } else {
-              Write-Host "Warning: nonrigid-icp-transform.exe not found in dist\bin\"
-          }
-
-          Write-Host "Final contents of dist/bin:"
-          Get-ChildItem "dist\bin" | ForEach-Object { Write-Host "  $($_.Name)" }
+          if (Test-Path "dist\bin\nonrigid-icp.exe") { Get-Dependencies -FilePath "dist\bin\nonrigid-icp.exe" -ProcessedFiles $processedFiles -DistBinPath $distBinPath -VcpkgBinPath $vcpkgBinPath } else { Write-Host "Warning: nonrigid-icp.exe not found" }
+          if (Test-Path "dist\bin\nonrigid-icp-transform.exe") { Get-Dependencies -FilePath "dist\bin\nonrigid-icp-transform.exe" -ProcessedFiles $processedFiles -DistBinPath $distBinPath -VcpkgBinPath $vcpkgBinPath } else { Write-Host "Warning: nonrigid-icp-transform.exe not found" }
+          Write-Host "Final contents of dist/bin:"; Get-ChildItem "dist\bin" | ForEach-Object { Write-Host "  $($_.Name)" }
 
       - name: Create README for distribution
         shell: powershell
@@ -171,12 +144,10 @@ jobs:
           This package contains the Windows executables and all necessary DLL dependencies.
 
           ## Executables
-
           - **nonrigid-icp.exe** - Main registration tool for non-rigid point cloud registration
           - **nonrigid-icp-transform.exe** - Transform application tool
 
           ## Usage
-
           Open Command Prompt or PowerShell in this directory and run:
 
           ```cmd
@@ -185,13 +156,11 @@ jobs:
           ```
 
           ## System Requirements
-
           - Windows 10/11 (x64)
           - Visual C++ Redistributable 2022 (usually already installed)
 
-          Built with Microsoft Visual Studio 2022 and vcpkg package manager.
+          Built with Microsoft Visual Studio 2022, vcpkg (core C++ deps) and conda-forge PDAL.
           "@
-
           $readme | Out-File -FilePath "dist\README.md" -Encoding utf8
 
       - name: Test executables
@@ -199,45 +168,17 @@ jobs:
         working-directory: ${{ env.SHORT_WS }}
         run: |
           Write-Host "Testing executables..."
-
-          # Test nonrigid-icp
           Write-Host "Testing nonrigid-icp.exe..."
-          try {
-              & "dist\bin\nonrigid-icp.exe" --help
-              Write-Host "nonrigid-icp.exe runs successfully"
-          } catch {
-              Write-Host "nonrigid-icp.exe --help failed, but checking if it launches..."
-              $process = Start-Process -FilePath "dist\bin\nonrigid-icp.exe" -PassThru -NoNewWindow -Wait
-              if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 1) {
-                  Write-Host "nonrigid-icp.exe launches successfully"
-              }
-          }
-
-          # Test nonrigid-icp-transform
+          try { & "dist\bin\nonrigid-icp.exe" --help; Write-Host "nonrigid-icp.exe runs successfully" } catch { Write-Host "Help failed; trying launch"; $p = Start-Process -FilePath "dist\bin\nonrigid-icp.exe" -PassThru -NoNewWindow -Wait; Write-Host "ExitCode=$($p.ExitCode)" }
           Write-Host "Testing nonrigid-icp-transform.exe..."
-          try {
-              & "dist\bin\nonrigid-icp-transform.exe" --help
-              Write-Host "nonrigid-icp-transform.exe runs successfully"
-          } catch {
-              Write-Host "nonrigid-icp-transform.exe --help failed, but checking if it launches..."
-              $process = Start-Process -FilePath "dist\bin\nonrigid-icp-transform.exe" -PassThru -NoNewWindow -Wait
-              if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 1) {
-                  Write-Host "nonrigid-icp-transform.exe launches successfully"
-              }
-          }
+          try { & "dist\bin\nonrigid-icp-transform.exe" --help; Write-Host "nonrigid-icp-transform.exe runs successfully" } catch { Write-Host "Help failed; trying launch"; $p = Start-Process -FilePath "dist\bin\nonrigid-icp-transform.exe" -PassThru -NoNewWindow -Wait; Write-Host "ExitCode=$($p.ExitCode)" }
 
       - name: Create ZIP archive
         shell: powershell
         working-directory: ${{ env.SHORT_WS }}
         run: |
           Compress-Archive -Path "dist\*" -DestinationPath "nonrigid-icp-windows-x64.zip"
-
-          # Show archive contents using PowerShell
-          Write-Host "Archive contents:"
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $zip = [System.IO.Compression.ZipFile]::OpenRead("nonrigid-icp-windows-x64.zip")
-          $zip.Entries | ForEach-Object { Write-Host "  $($_.FullName) ($($_.Length) bytes)" }
-          $zip.Dispose()
+          Write-Host "Archive contents:"; Add-Type -AssemblyName System.IO.Compression.FileSystem; $zip = [System.IO.Compression.ZipFile]::OpenRead("nonrigid-icp-windows-x64.zip"); $zip.Entries | ForEach-Object { Write-Host "  $($_.FullName) ($($_.Length) bytes)" }; $zip.Dispose()
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -251,14 +192,12 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     if: startsWith(github.ref, 'refs/tags/v')
-
     steps:
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
           name: windows-executables-Release
           path: ./release-artifacts
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
