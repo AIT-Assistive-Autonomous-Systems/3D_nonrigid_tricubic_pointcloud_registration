@@ -26,10 +26,20 @@ jobs:
         id: vcpkg
         with:
           manifest-dir: ${{ github.workspace }}
-          triplet: x64-windows-release
+          triplet: x64-windows
           cache-key: windows-2022-eigen3-spdlog-nanoflann-pdal-cxxopts
           revision: 2024.12.16 # Pin to stable release for better cache hits
           token: ${{ github.token }}
+
+      - name: Upload vcpkg logs on failure
+        if: failure() && steps.vcpkg.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-build-logs
+          path: |
+            vcpkg/buildtrees/**/*.log
+            vcpkg/buildtrees/**/config-*.txt
+          retention-days: 5
 
       - name: Configure CMake
         run: |
