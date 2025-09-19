@@ -5,7 +5,10 @@
     "eigen3",
     "spdlog",
     "nanoflann",
-    "pdal",
+    {
+      "name": "pdal",
+      "features": []
+    },
     "cxxopts"
   ]
 }
