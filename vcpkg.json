@@ -10,6 +10,7 @@
       "default-features": false,
       "features": []
     },
-    "cxxopts"
+    "cxxopts",
+    "libiconv"
   ]
 }
