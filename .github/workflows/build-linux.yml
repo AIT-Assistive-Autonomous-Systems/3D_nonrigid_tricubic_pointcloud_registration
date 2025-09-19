@@ -2,11 +2,11 @@ name: Build on Linux
 
 on:
   push:
-    branches: ["main"]
-    tags: ["v*"] # Run on version tags
+    branches: ["**"]
+    tags: ["v*"]
   pull_request:
-    branches: ["main"]
-  workflow_dispatch: # Allow manual triggering
+    branches: ["**"]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -41,15 +41,53 @@ jobs:
         with:
           manifest-dir: ${{ github.workspace }}
           triplet: x64-linux-release
-          cache-key: ubuntu-22.04-eigen3-spdlog-nanoflann-pdal-cxxopts
+          cache-key: ubuntu-22.04-eigen3-spdlog-nanoflann-cxxopts
           revision: 2024.09.30 # Pin to stable release for better cache hits
           token: ${{ github.token }}
 
+      - name: Set up Miniconda (for PDAL)
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          activate-environment: pdal-env
+          python-version: 3.11
+          channels: conda-forge
+          channel-priority: strict
+
+      - name: Install PDAL via conda
+        shell: bash -l {0}
+        run: |
+          echo "Conda info before install:"
+          conda info
+          conda install -y pdal
+          echo "PDAL version:"
+          pdal --version || true
+          echo "Listing PDAL related libs:"
+          find "$CONDA_PREFIX/lib" -name "*pdal*" 2>/dev/null || true
+          echo "CONDA_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
+
       - name: Configure CMake
         run: |
+          # Set PDAL_DIR to conda environment path
+          PDAL_DIR="${CONDA_PREFIX}/lib/cmake/PDAL"
+          if [ ! -d "$PDAL_DIR" ]; then
+            echo "Primary PDAL config path not found: $PDAL_DIR"
+            # Search for PDAL config in conda environment
+            FOUND_DIR=$(find "${CONDA_PREFIX}/lib/cmake" -type d -name "PDAL*" 2>/dev/null | head -1)
+            if [ -n "$FOUND_DIR" ] && [ -f "$FOUND_DIR/PDALConfig.cmake" ]; then
+              PDAL_DIR="$FOUND_DIR"
+              echo "Found PDAL config directory via search: $PDAL_DIR"
+            else
+              echo "Warning: Could not locate PDALConfig.cmake in conda environment"
+            fi
+          else
+            echo "Found PDAL config at $PDAL_DIR"
+          fi
+          
           cmake -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
+            -DPDAL_DIR="${PDAL_DIR}" \
             ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
 
       - name: Build
