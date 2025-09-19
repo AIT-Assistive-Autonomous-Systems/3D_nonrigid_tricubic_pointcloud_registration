@@ -30,6 +30,8 @@ jobs:
           cache-key: windows-2022-eigen3-spdlog-nanoflann-pdal-cxxopts
           revision: 2024.09.30 # Pin to stable release for better cache hits
           token: ${{ github.token }}
+        env:
+          VCPKG_BUILD_TYPE: release
 
       - name: Configure CMake
         run: |
