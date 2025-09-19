@@ -28,7 +28,7 @@ jobs:
           manifest-dir: ${{ github.workspace }}
           triplet: x64-windows
           cache-key: windows-2022-eigen3-spdlog-nanoflann-pdal-cxxopts
-          revision: 2024.12.16 # Pin to stable release for better cache hits
+          # revision: 2024.12.16 # Pin to stable release for better cache hits
           token: ${{ github.token }}
 
       - name: Upload vcpkg logs on failure
