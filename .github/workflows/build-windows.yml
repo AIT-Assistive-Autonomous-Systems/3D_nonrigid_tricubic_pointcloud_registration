@@ -143,7 +143,13 @@ jobs:
           $processedFiles = New-Object System.Collections.Generic.HashSet[string]
           $vcpkgBinPath = "build\vcpkg_installed\x64-windows\bin"
           $distBinPath = "dist\bin"
-          $condaBinPath = if ($env:CONDA_PREFIX) { Join-Path $env:CONDA_PREFIX 'Library' 'bin' } else { $null }
+          # Build conda bin path (Join-Path supports only two segments at a time, so use Path.Combine for multiple)
+          if ($env:CONDA_PREFIX) {
+            $condaBinPath = [System.IO.Path]::Combine($env:CONDA_PREFIX,'Library','bin')
+            if (-not (Test-Path $condaBinPath)) { Write-Host "Warning: Expected conda bin path not found: $condaBinPath" }
+          } else {
+            $condaBinPath = $null
+          }
           Write-Host "vcpkg bin path: $vcpkgBinPath"
           Write-Host "conda bin path: $condaBinPath"
           Write-Host "Distribution bin path: $distBinPath"
