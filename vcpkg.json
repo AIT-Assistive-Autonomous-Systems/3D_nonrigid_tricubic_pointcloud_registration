@@ -5,6 +5,7 @@
     "eigen3",
     "spdlog",
     "nanoflann",
-    "cxxopts"
+    "cxxopts",
+    "fmt"
   ]
 }

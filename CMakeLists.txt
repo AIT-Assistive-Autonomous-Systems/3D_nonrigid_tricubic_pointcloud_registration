@@ -25,6 +25,7 @@ find_package(spdlog REQUIRED)
 find_package(nanoflann)
 find_package(PDAL 2.3.0 REQUIRED)
 find_package(cxxopts 3.0.0 REQUIRED)
+find_package(fmt REQUIRED)
 
 # GoogleTest
 include(FetchContent)
@@ -40,6 +41,7 @@ link_directories(${PDAL_LIBRARY_DIRS})
 add_definitions(${PDAL_DEFINITIONS})
 
 set(LIB_SPDLOG spdlog::spdlog)
+set(LIB_FMT fmt::fmt)
 set(LIB_EIGEN Eigen3::Eigen)
 set(LIB_NANOFLANN nanoflann::nanoflann)
 
@@ -61,7 +63,7 @@ add_library(libnonrigid_icp STATIC
     src/lib/optimization.cpp
     src/lib/optimization.hpp)
 
-target_link_libraries(libnonrigid_icp PUBLIC ${LIB_SPDLOG} ${LIB_EIGEN} ${LIB_NANOFLANN} ${PDAL_LIBRARIES})
+target_link_libraries(libnonrigid_icp PUBLIC ${LIB_SPDLOG} ${LIB_FMT} ${LIB_EIGEN} ${LIB_NANOFLANN} ${PDAL_LIBRARIES})
 target_include_directories(libnonrigid_icp PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src/lib)
 target_include_directories(libnonrigid_icp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
