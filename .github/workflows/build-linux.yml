@@ -2,10 +2,10 @@ name: Build on Linux
 
 on:
   push:
-    branches: ["**"] # Run on all branches
+    branches: ["main"]
     tags: ["v*"] # Run on version tags
   pull_request:
-    branches: ["**"] # Run on PRs to all branches
+    branches: ["main"]
   workflow_dispatch: # Allow manual triggering
 
 jobs:
@@ -173,14 +173,14 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     if: startsWith(github.ref, 'refs/tags/v')
-    
+
     steps:
       - name: Download AppImage artifacts
         uses: actions/download-artifact@v4
         with:
           name: linux-appimages-Release
           path: ./release-artifacts
-      
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -191,16 +191,16 @@ jobs:
           name: "3D Non-Rigid ICP ${{ github.ref_name }}"
           body: |
             ## Downloads
-            - `nonrigid-icp-x86_64.AppImage` - Main registration tool  
+            - `nonrigid-icp-x86_64.AppImage` - Main registration tool
             - `nonrigid-icp-transform-x86_64.AppImage` - Transform application tool
-            
+
             ## Usage
             ```bash
             chmod +x *.AppImage
             ./nonrigid-icp-x86_64.AppImage --help
             ./nonrigid-icp-transform-x86_64.AppImage --help
             ```
-            
+
             ## System Requirements
             - Linux x86_64
             - Compatible with Ubuntu 22.04 and newer
