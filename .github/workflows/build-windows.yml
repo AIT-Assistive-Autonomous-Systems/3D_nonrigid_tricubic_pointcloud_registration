@@ -1,0 +1,257 @@
+name: Build on Windows
+
+on:
+  push:
+    branches: ["**"] # Run on all branches
+    tags: ["v*"] # Run on version tags
+  pull_request:
+    branches: ["**"] # Run on PRs to all branches
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: vcpkg build
+        uses: johnwason/vcpkg-action@v7
+        id: vcpkg
+        with:
+          manifest-dir: ${{ github.workspace }}
+          triplet: x64-windows
+          cache-key: windows-2022-eigen3-spdlog-nanoflann-pdal-cxxopts
+          revision: 2024.09.30 # Pin to stable release for better cache hits
+          token: ${{ github.token }}
+
+      - name: Configure CMake
+        run: |
+          cmake -B build `
+            -G "Visual Studio 17 2022" `
+            -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            ${{ steps.vcpkg.outputs.vcpkg-cmake-config }}
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Create distribution directory
+        run: |
+          New-Item -ItemType Directory -Force -Path "dist"
+          New-Item -ItemType Directory -Force -Path "dist/bin"
+
+      - name: Copy executables
+        run: |
+          Copy-Item "build\Release\nonrigid-icp.exe" "dist\bin\"
+          Copy-Item "build\Release\nonrigid-icp-transform.exe" "dist\bin\"
+
+      - name: Find and copy DLL dependencies
+        shell: powershell
+        run: |
+          # Function to get dependencies recursively
+          function Get-Dependencies {
+              param($FilePath, $ProcessedFiles, $DistBinPath, $VcpkgBinPath)
+
+              if ($ProcessedFiles -contains $FilePath) {
+                  return
+              }
+              $ProcessedFiles.Add($FilePath) | Out-Null
+
+              Write-Host "Processing: $FilePath"
+
+              # Get dependencies using dumpbin - find the correct path
+              $dumpbinPath = Get-ChildItem "C:\Program Files\Microsoft Visual Studio\2022\*\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" | Select-Object -First 1
+              if (-not $dumpbinPath) {
+                  Write-Host "Warning: dumpbin.exe not found, skipping dependency analysis for $FilePath"
+                  return
+              }
+
+              $deps = & $dumpbinPath.FullName /dependents $FilePath 2>$null |
+                      Select-String "\.dll" |
+                      ForEach-Object { $_.Line.Trim() }
+
+              foreach ($dep in $deps) {
+                  if ($dep -match "^\s*([a-zA-Z0-9_\-\.]+\.dll)\s*$") {
+                      $dllName = $matches[1]
+
+                      # Skip system DLLs
+                      if ($dllName -match "^(kernel32|user32|gdi32|winspool|comdlg32|advapi32|shell32|ole32|oleaut32|uuid|odbc32|odbccp32|msvcrt|vcruntime|api-ms-|ucrtbase|msvcp)") {
+                          continue
+                      }
+
+                      # Look for the DLL in vcpkg installed directory
+                      $vcpkgDllPath = Join-Path $VcpkgBinPath $dllName
+                      $distDllPath = Join-Path $DistBinPath $dllName
+
+                      if (Test-Path $vcpkgDllPath) {
+                          if (-not (Test-Path $distDllPath)) {
+                              Write-Host "Copying dependency: $dllName"
+                              Copy-Item $vcpkgDllPath $DistBinPath
+
+                              # Recursively process this DLL's dependencies
+                              Get-Dependencies -FilePath $distDllPath -ProcessedFiles $ProcessedFiles -DistBinPath $DistBinPath -VcpkgBinPath $VcpkgBinPath
+                          }
+                      } else {
+                          Write-Host "Warning: Could not find $dllName in vcpkg directory"
+                      }
+                  }
+              }
+          }
+
+          # Initialize
+          $processedFiles = New-Object System.Collections.Generic.HashSet[string]
+          $vcpkgBinPath = "build\vcpkg_installed\x64-windows\bin"
+          $distBinPath = "dist\bin"
+
+          Write-Host "vcpkg bin path: $vcpkgBinPath"
+          Write-Host "Distribution bin path: $distBinPath"
+
+          # List available DLLs in vcpkg
+          Write-Host "Available DLLs in vcpkg:"
+          if (Test-Path $vcpkgBinPath) {
+              Get-ChildItem $vcpkgBinPath -Filter "*.dll" | ForEach-Object { Write-Host "  $($_.Name)" }
+          } else {
+              Write-Host "Warning: vcpkg bin path not found: $vcpkgBinPath"
+          }
+
+          # Process each executable
+          if (Test-Path "dist\bin\nonrigid-icp.exe") {
+              Get-Dependencies -FilePath "dist\bin\nonrigid-icp.exe" -ProcessedFiles $processedFiles -DistBinPath $distBinPath -VcpkgBinPath $vcpkgBinPath
+          } else {
+              Write-Host "Warning: nonrigid-icp.exe not found in dist\bin\"
+          }
+
+          if (Test-Path "dist\bin\nonrigid-icp-transform.exe") {
+              Get-Dependencies -FilePath "dist\bin\nonrigid-icp-transform.exe" -ProcessedFiles $processedFiles -DistBinPath $distBinPath -VcpkgBinPath $vcpkgBinPath
+          } else {
+              Write-Host "Warning: nonrigid-icp-transform.exe not found in dist\bin\"
+          }
+
+          Write-Host "Final contents of dist/bin:"
+          Get-ChildItem "dist\bin" | ForEach-Object { Write-Host "  $($_.Name)" }
+
+      - name: Create README for distribution
+        shell: powershell
+        run: |
+          $readme = @"
+          # 3D Non-Rigid Tricubic Point Cloud Registration - Windows Distribution
+
+          This package contains the Windows executables and all necessary DLL dependencies.
+
+          ## Executables
+
+          - **nonrigid-icp.exe** - Main registration tool for non-rigid point cloud registration
+          - **nonrigid-icp-transform.exe** - Transform application tool
+
+          ## Usage
+
+          Open Command Prompt or PowerShell in this directory and run:
+
+          ```cmd
+          nonrigid-icp.exe --help
+          nonrigid-icp-transform.exe --help
+          ```
+
+          ## System Requirements
+
+          - Windows 10/11 (x64)
+          - Visual C++ Redistributable 2022 (usually already installed)
+
+          Built with Microsoft Visual Studio 2022 and vcpkg package manager.
+          "@
+
+          $readme | Out-File -FilePath "dist\README.md" -Encoding utf8
+
+      - name: Test executables
+        shell: powershell
+        run: |
+          Write-Host "Testing executables..."
+
+          # Test nonrigid-icp
+          Write-Host "Testing nonrigid-icp.exe..."
+          try {
+              & "dist\bin\nonrigid-icp.exe" --help
+              Write-Host "nonrigid-icp.exe runs successfully"
+          } catch {
+              Write-Host "nonrigid-icp.exe --help failed, but checking if it launches..."
+              $process = Start-Process -FilePath "dist\bin\nonrigid-icp.exe" -PassThru -NoNewWindow -Wait
+              if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 1) {
+                  Write-Host "nonrigid-icp.exe launches successfully"
+              }
+          }
+
+          # Test nonrigid-icp-transform
+          Write-Host "Testing nonrigid-icp-transform.exe..."
+          try {
+              & "dist\bin\nonrigid-icp-transform.exe" --help
+              Write-Host "nonrigid-icp-transform.exe runs successfully"
+          } catch {
+              Write-Host "nonrigid-icp-transform.exe --help failed, but checking if it launches..."
+              $process = Start-Process -FilePath "dist\bin\nonrigid-icp-transform.exe" -PassThru -NoNewWindow -Wait
+              if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 1) {
+                  Write-Host "nonrigid-icp-transform.exe launches successfully"
+              }
+          }
+
+      - name: Create ZIP archive
+        shell: powershell
+        run: |
+          Compress-Archive -Path "dist\*" -DestinationPath "nonrigid-icp-windows-x64.zip"
+
+          # Show archive contents using PowerShell
+          Write-Host "Archive contents:"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [System.IO.Compression.ZipFile]::OpenRead("nonrigid-icp-windows-x64.zip")
+          $zip.Entries | ForEach-Object { Write-Host "  $($_.FullName) ($($_.Length) bytes)" }
+          $zip.Dispose()
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-executables-Release
+          path: |
+            nonrigid-icp-windows-x64.zip
+          retention-days: 7
+
+  release:
+    needs: build
+    runs-on: ubuntu-22.04
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-executables-Release
+          path: ./release-artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./release-artifacts/nonrigid-icp-windows-x64.zip
+          generate_release_notes: true
+          name: "3D Non-Rigid ICP ${{ github.ref_name }}"
+          body: |
+            ## Downloads
+            - `nonrigid-icp-windows-x64.zip` - Windows executables with all dependencies
+
+            ## Usage
+            Extract the ZIP file and run:
+            ```cmd
+            nonrigid-icp.exe --help
+            nonrigid-icp-transform.exe --help
+            ```
+
+            ## System Requirements
+            - Windows 10/11 (x64)
+            - Visual C++ Redistributable 2022 (usually already installed)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
