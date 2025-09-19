@@ -26,12 +26,10 @@ jobs:
         id: vcpkg
         with:
           manifest-dir: ${{ github.workspace }}
-          triplet: x64-windows
+          triplet: x64-windows-release
           cache-key: windows-2022-eigen3-spdlog-nanoflann-pdal-cxxopts
-          revision: 2024.09.30 # Pin to stable release for better cache hits
+          revision: 2024.12.16 # Pin to stable release for better cache hits
           token: ${{ github.token }}
-        env:
-          VCPKG_BUILD_TYPE: release
 
       - name: Configure CMake
         run: |
