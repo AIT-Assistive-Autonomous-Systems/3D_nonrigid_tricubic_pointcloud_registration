@@ -119,9 +119,11 @@ The paper can be found at [https://www.mdpi.com/2072-4292/15/22/5348](https://ww
 
 A prototype implementation of this algorithm for 2D point clouds written in Matlab can be found [here](https://github.com/AIT-Assistive-Autonomous-Systems/2D_nonrigid_tricubic_pointcloud_registration).
 
-## Building
+## Build
 
-A predefined development environment for [VSCode](https://code.visualstudio.com) is provided [here](.devcontainer/). To use this environment, simply open this repository in VSCode and:
+### Building on Linux
+
+A ready-to-use development environment for [VSCode](https://code.visualstudio.com) is available in the [.devcontainer/](.devcontainer/) folder. To get started, clone this repository (use LFS if you plan to run the tests), open it in VSCode, and follow these steps:
 1. Open the devcontainer with the command ``Dev Containers: Reopen in Container``. This will automatically build the development environment and open it. Then run in the container:
     1. The command ``CMake: Select a Kit`` to select a compiler.
     2. The command ``CMake: Select Variant`` to select a the ``Release`` build type.
@@ -130,6 +132,10 @@ A predefined development environment for [VSCode](https://code.visualstudio.com)
 2. You can find the two executables in the ``bin`` directory:
     - ``nonrigid-icp`` is used to estimate the non-rigid transformation between two point clouds.
     - ``nonrigid-icp-transform`` is used to apply the estimated transformation to a point cloud.
+
+### Building on Windows
+
+Look into the [.github/workflows/build-windows.yml](.github/workflows/build-windows.yml) file for instructions on how to build the project on Windows using CMake and Visual Studio.
 
 ## Star History
 
