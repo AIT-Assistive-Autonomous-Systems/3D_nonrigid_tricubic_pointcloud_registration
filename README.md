@@ -27,7 +27,7 @@ Two command line executables are provided:
 - `nonrigid-icp`: Estimates the non-rigid transformation between two point clouds
 - `nonrigid-icp-transform`: Applies the estimated non-rigid transformation to a point cloud
 
-Builds are provided for Linux, see [Releases](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration/releases).
+Builds are provided for Linux and Windows, see [Releases](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration/releases).
 
 These are the help messages of the two executables:
 
