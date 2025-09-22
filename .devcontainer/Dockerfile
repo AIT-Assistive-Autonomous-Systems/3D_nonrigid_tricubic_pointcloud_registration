@@ -10,8 +10,30 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     pkg-config \
     ninja-build \
     bison \
-    flex
+    flex \
+    wget \
+    curl
 
-# Install C++ dependencies via vcpkg using vcpkg.json
-COPY vcpkg.json /tmp/vcpkg.json
-RUN su vscode -c "cd /tmp && ${VCPKG_ROOT}/vcpkg install"
+# Install miniconda for PDAL
+# Note: Installing PDAL with vcpkg is possible, but it builds from source and is very slow.
+# Using the precompiled conda package is much faster.
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    chmod +x /tmp/miniconda.sh && \
+    /tmp/miniconda.sh -b -p /opt/miniconda && \
+    rm /tmp/miniconda.sh
+
+# Add conda to PATH for all users
+ENV PATH="/opt/miniconda/bin:$PATH"
+
+# Configure conda
+RUN conda config --remove channels defaults && \
+    conda config --add channels conda-forge && \
+    conda config --set channel_priority strict
+
+# Accept Conda Terms of Service
+RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+# Install PDAL via conda
+RUN conda install pdal -y --quiet && \
+    conda clean -a -y --quiet

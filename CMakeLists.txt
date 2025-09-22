@@ -4,6 +4,11 @@ project(tricubic_interpolation)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Avoid Windows headers defining min/max macros that conflict with std::min/std::max
+if (WIN32)
+    add_compile_definitions(NOMINMAX)
+endif()
+
 # Add compiler warnings for GCC and Clang
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -16,10 +21,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(spdlog REQUIRED)
 find_package(nanoflann)
 find_package(PDAL 2.3.0 REQUIRED)
 find_package(cxxopts 3.0.0 REQUIRED)
+find_package(fmt REQUIRED)
 
 # GoogleTest
 include(FetchContent)
@@ -34,9 +39,10 @@ include_directories(${PDAL_INCLUDE_DIRS})
 link_directories(${PDAL_LIBRARY_DIRS})
 add_definitions(${PDAL_DEFINITIONS})
 
-set(LIB_SPDLOG spdlog::spdlog)
 set(LIB_EIGEN Eigen3::Eigen)
 set(LIB_NANOFLANN nanoflann::nanoflann)
+set(LIB_FMT fmt::fmt)
+set(LIB_CXXOPTS cxxopts::cxxopts)
 
 set(BIN_DIR "${CMAKE_CURRENT_LIST_DIR}/bin") # binaries will be copied to this directory
 #message("BIN_DIR=" ${BIN_DIR})
@@ -56,21 +62,20 @@ add_library(libnonrigid_icp STATIC
     src/lib/optimization.cpp
     src/lib/optimization.hpp)
 
-target_link_libraries(libnonrigid_icp PUBLIC ${LIB_SPDLOG} ${LIB_EIGEN} ${LIB_NANOFLANN} ${PDAL_LIBRARIES})
+target_link_libraries(libnonrigid_icp PUBLIC ${LIB_EIGEN} ${LIB_NANOFLANN} ${PDAL_LIBRARIES})
 target_include_directories(libnonrigid_icp PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src/lib)
 target_include_directories(libnonrigid_icp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-
 set_target_properties(libnonrigid_icp PROPERTIES DEBUG_POSTFIX _d)
 
 # nonrigid-icp executable
 add_executable(nonrigid-icp src/prog/nonrigid_icp.cpp)
-target_link_libraries(nonrigid-icp libnonrigid_icp)
+target_link_libraries(nonrigid-icp libnonrigid_icp ${LIB_CXXOPTS} ${LIB_FMT})
 target_include_directories(nonrigid-icp PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 set_target_properties(nonrigid-icp PROPERTIES DEBUG_POSTFIX _d)
 
 # nonrigid-icp-transform executable
 add_executable(nonrigid-icp-transform src/prog/nonrigid_icp_transform.cpp)
-target_link_libraries(nonrigid-icp-transform libnonrigid_icp)
+target_link_libraries(nonrigid-icp-transform libnonrigid_icp ${LIB_CXXOPTS} ${LIB_FMT})
 target_include_directories(nonrigid-icp-transform PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 set_target_properties(nonrigid-icp-transform PROPERTIES DEBUG_POSTFIX _d)
 

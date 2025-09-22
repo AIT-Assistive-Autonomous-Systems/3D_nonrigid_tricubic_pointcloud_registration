@@ -1,11 +1,13 @@
-#include <spdlog/spdlog.h>
-#include <spdlog/stopwatch.h>
+#include <fmt/format.h>
 
+#include <algorithm>
 #include <cxxopts.hpp>
+#include <iostream>
 
 #include "src/lib/io_utils.hpp"
 #include "src/lib/profiler.hpp"
 #include "src/lib/pt_cloud.hpp"
+#include "src/lib/timer.hpp"
 
 struct Params {
   std::string pc_in;
@@ -20,31 +22,45 @@ Params ParseUserInputs(int argc, char** argv);
 
 int main(int argc, char** argv) {
   try {
-    spdlog::set_pattern("%v");
-
     Params params = ParseUserInputs(argc, argv);
 
     auto& profiler = Profiler::Instance();
 
-    spdlog::stopwatch sw;
-    spdlog::info("Start of \"nonrigid-icp-transform\"");
+    Timer timer;
+    if (!params.suppress_logging) {
+      std::cout << "Start of \"nonrigid-icp-transform\"\n";
+    }
 
     if (params.profiling) profiler.Start("A.01 Read input point cloud");
-    spdlog::info("Read input point cloud \"{}\"", params.pc_in);
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("Read input point cloud \"{}\"\n", params.pc_in);
+    }
     auto X = ImportFileToMatrix(params.pc_in, false, false);
-    spdlog::info("  Input point cloud has {:d} points", X.rows());
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("  Input point cloud has {:d} points\n", X.rows());
+    }
     if (params.profiling) profiler.Stop("A.01 Read input point cloud");
 
     // Iterate over chunks of the point cloud
     if (params.profiling) profiler.Start("A.02 Transformation of point cloud");
-    long num_chunks = X.rows() / params.chunk_size + 1;
-    for (long i = 0; i < X.rows(); i += params.chunk_size) {
-      spdlog::info("Transforming point cloud chunk {:d}/{:d} ...", i / params.chunk_size + 1,
-                   num_chunks);
+    using Index = Eigen::Index;
+    Index total_rows = X.rows();
+    Index chunk_size = static_cast<Index>(params.chunk_size);
+    if (chunk_size <= 0) {
+      std::cerr << fmt::format("Chunk size must be positive (got {:d})\n", params.chunk_size);
+      return 1;
+    }
+    Index num_chunks = (total_rows + chunk_size - 1) / chunk_size;  // ceil division
+    for (Index i = 0; i < total_rows; i += chunk_size) {
+      if (!params.suppress_logging) {
+        std::cout << fmt::format("Transforming point cloud chunk {:d}/{:d} ...\n",
+                                 static_cast<long long>(i / chunk_size + 1),
+                                 static_cast<long long>(num_chunks));
+      }
 
       // Row indices
-      long first_row{i};
-      long last_row{std::min(i + params.chunk_size, X.rows())};
+      Index first_row = i;
+      Index last_row = (std::min)(i + chunk_size, total_rows);  // (std::min) to avoid macro issues
       auto row_indices = Eigen::seq(first_row, last_row - 1);
 
       // Transform points in chunk
@@ -62,11 +78,15 @@ int main(int argc, char** argv) {
     if (params.profiling) profiler.Stop("A.02 Transformation of point cloud");
 
     if (params.profiling) profiler.Start("A.03 Write point cloud");
-    spdlog::info("Write transformed point cloud to file: \"{}\"", params.pc_out);
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("Write transformed point cloud to file: \"{}\"\n", params.pc_out);
+    }
     SaveMatrixToFile(X, params.pc_in, params.pc_out);
     if (params.profiling) profiler.Stop("A.03 Write point cloud");
 
-    spdlog::info("Finished \"nonrigid-icp-transform\" in {:.3}s!", sw);
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("Finished \"nonrigid-icp-transform\" in {}!\n", timer);
+    }
 
     if (params.profiling && !params.suppress_logging) profiler.PrintSummary();
   } catch (const std::exception& e) {
@@ -109,6 +129,12 @@ Params ParseUserInputs(int argc, char** argv) {
    "Print usage");
   // clang-format on
 
+  // Show help if no arguments are provided
+  if (argc == 1) {
+    std::cout << options.help() << std::endl;
+    exit(0);
+  }
+
   auto result = options.parse(argc, argv);
 
   if (result.count("help")) {
@@ -124,11 +150,6 @@ Params ParseUserInputs(int argc, char** argv) {
   params.chunk_size = result["chunk_size"].as<long>();
   params.suppress_logging = result["suppress_logging"].as<bool>();
   params.profiling = result["profiling"].as<bool>();
-
-  // Check parameter inputs
-  if (result["suppress_logging"].as<bool>()) {
-    spdlog::set_level(spdlog::level::off);
-  }
 
   return params;
 }

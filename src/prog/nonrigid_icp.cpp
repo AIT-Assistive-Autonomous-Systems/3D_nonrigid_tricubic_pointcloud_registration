@@ -1,7 +1,8 @@
+#include <fmt/format.h>
 #include <spdlog/spdlog.h>
-#include <spdlog/stopwatch.h>
 
 #include <cxxopts.hpp>
+#include <iostream>
 
 #include "src/lib/correspondences.hpp"
 #include "src/lib/io_utils.hpp"
@@ -9,6 +10,7 @@
 #include "src/lib/optimization.hpp"
 #include "src/lib/profiler.hpp"
 #include "src/lib/pt_cloud.hpp"
+#include "src/lib/timer.hpp"
 
 struct CorrespondencesResults {
   int num{};
@@ -47,17 +49,19 @@ void ReportIterationResults(const IterationResults& iteration_results);
 
 int main(int argc, char** argv) {
   try {
-    spdlog::set_pattern("%v");
-
     Params params = ParseUserInputs(argc, argv);
 
     auto& profiler = Profiler::Instance();
 
-    spdlog::stopwatch sw;
-    spdlog::info("Start of \"nonrigid-icp\"");
+    Timer timer;
+    if (!params.suppress_logging) {
+      std::cout << "Start of \"nonrigid-icp\"\n";
+    }
 
     if (params.profiling) profiler.Start("A.01 Create point cloud objects");
-    spdlog::info("Create point cloud objects");
+    if (!params.suppress_logging) {
+      std::cout << "Create point cloud objects\n";
+    }
     auto X_fix =
         ImportFileToMatrix(params.fixed, true, params.matching_mode == "id" ? true : false);
     auto X_mov =
@@ -74,47 +78,61 @@ int main(int argc, char** argv) {
       pc_fix.SetCorrespondenceId(X_fix.namedCol("correspondence_id"));
       pc_mov.SetCorrespondenceId(X_mov.namedCol("correspondence_id"));
     }
-    spdlog::info("  Fixed point cloud has {:d} points", pc_fix.NumPts());
-    spdlog::info("  Movable point cloud has {:d} points", pc_mov.NumPts());
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("  Fixed point cloud has {:d} points\n", pc_fix.NumPts());
+      std::cout << fmt::format("  Movable point cloud has {:d} points\n", pc_mov.NumPts());
+    }
     if (params.profiling) profiler.Stop("A.01 Create point cloud objects");
 
     if (params.profiling) profiler.Start("A.02 Initialization of translation grids");
-    spdlog::info("Initialize x/y/z translation grids for movable point cloud");
+    if (!params.suppress_logging) {
+      std::cout << "Initialize x/y/z translation grids for movable point cloud\n";
+    }
     pc_mov.InitializeTranslationGrids(params.voxel_size, params.buffer_voxels, params.grid_limits);
     pc_mov.InitMatricesForUpdateXt();
-    spdlog::info("Each translation grid (including buffer voxels) has the properties:");
-    spdlog::info(
-        "  x_min/x_max/x_num_voxels = {:.3f}/{:.3f}/{:d}",
-        pc_mov.x_translation_grid().grid_origin()(0),
-        pc_mov.x_translation_grid().grid_origin()(0) +
-            pc_mov.x_translation_grid().voxel_size() * pc_mov.x_translation_grid().x_num_voxels(),
-        pc_mov.x_translation_grid().x_num_voxels());
-    spdlog::info(
-        "  y_min/y_max/y_num_voxels = {:.3f}/{:.3f}/{:d}",
-        pc_mov.x_translation_grid().grid_origin()(1),
-        pc_mov.x_translation_grid().grid_origin()(1) +
-            pc_mov.x_translation_grid().voxel_size() * pc_mov.x_translation_grid().y_num_voxels(),
-        pc_mov.x_translation_grid().y_num_voxels());
-    spdlog::info(
-        "  z_min/z_max/z_num_voxels = {:.3f}/{:.3f}/{:d}",
-        pc_mov.x_translation_grid().grid_origin()(2),
-        pc_mov.x_translation_grid().grid_origin()(2) +
-            pc_mov.x_translation_grid().voxel_size() * pc_mov.x_translation_grid().z_num_voxels(),
-        pc_mov.x_translation_grid().z_num_voxels());
-    spdlog::info("  num_grid_vals = {:d}", pc_mov.x_translation_grid().num_grid_vals());
+    if (!params.suppress_logging) {
+      std::cout << "Each translation grid (including buffer voxels) has the properties:\n";
+      std::cout << fmt::format(
+          "  x_min/x_max/x_num_voxels = {:.3f}/{:.3f}/{:d}\n",
+          pc_mov.x_translation_grid().grid_origin()(0),
+          pc_mov.x_translation_grid().grid_origin()(0) +
+              pc_mov.x_translation_grid().voxel_size() * pc_mov.x_translation_grid().x_num_voxels(),
+          pc_mov.x_translation_grid().x_num_voxels());
+      std::cout << fmt::format(
+          "  y_min/y_max/y_num_voxels = {:.3f}/{:.3f}/{:d}\n",
+          pc_mov.x_translation_grid().grid_origin()(1),
+          pc_mov.x_translation_grid().grid_origin()(1) +
+              pc_mov.x_translation_grid().voxel_size() * pc_mov.x_translation_grid().y_num_voxels(),
+          pc_mov.x_translation_grid().y_num_voxels());
+      std::cout << fmt::format(
+          "  z_min/z_max/z_num_voxels = {:.3f}/{:.3f}/{:d}\n",
+          pc_mov.x_translation_grid().grid_origin()(2),
+          pc_mov.x_translation_grid().grid_origin()(2) +
+              pc_mov.x_translation_grid().voxel_size() * pc_mov.x_translation_grid().z_num_voxels(),
+          pc_mov.x_translation_grid().z_num_voxels());
+      std::cout << fmt::format("  num_grid_vals = {:d}\n",
+                               pc_mov.x_translation_grid().num_grid_vals());
+    }
     if (params.profiling) profiler.Stop("A.02 Initialization of translation grids");
 
     if (params.profiling) profiler.Start("A.03 Selection of correspondences");
-    spdlog::info("Selection of correspondences in fixed point cloud");
+    if (!params.suppress_logging) {
+      std::cout << "Selection of correspondences in fixed point cloud\n";
+    }
     Correspondences correspondences{pc_fix, pc_mov};
     correspondences.SelectPointsByRandomSampling(params.num_correspondences);
     auto idx_pc_fix{correspondences.GetSelectedPoints()};
-    spdlog::info("Selected {:d} points in fixed point cloud", correspondences.num());
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("Selected {:d} points in fixed point cloud\n",
+                               correspondences.num());
+    }
     if (params.profiling) profiler.Stop("A.03 Selection of correspondences");
 
     auto debug_mode = (params.debug_dir != "");
 
-    spdlog::info("Start iterative point cloud matching");
+    if (!params.suppress_logging) {
+      std::cout << "Start iterative point cloud matching\n";
+    }
     IterationResults iteration_results{};
     for (uint32_t it = 0; it < params.num_iterations; it++) {
       iteration_results.it = it + 1;
@@ -161,11 +179,16 @@ int main(int argc, char** argv) {
     }
 
     if (params.profiling) profiler.Start("A.06 Export of translation grids");
-    spdlog::info("Export of estimated translation grids to \"{}\"", params.transform);
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("Export of estimated translation grids to \"{}\"\n",
+                               params.transform);
+    }
     pc_mov.ExportTranslationGrids(params.transform);
     if (params.profiling) profiler.Stop("A.06 Export of translation grids");
 
-    spdlog::info("Finished \"nonrigid-icp\" in {:.3}s!", sw);
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("Finished \"nonrigid-icp\" in {}!\n", timer);
+    }
 
     if (params.profiling && !params.suppress_logging) profiler.PrintSummary();
 
@@ -236,6 +259,12 @@ Params ParseUserInputs(int argc, char** argv) {
     "Print usage");
   // clang-format on
 
+  // Show help if no arguments are provided
+  if (argc == 1) {
+    std::cout << options.help() << std::endl;
+    exit(0);
+  }
+
   auto result = options.parse(argc, argv);
 
   if (result.count("help")) {
@@ -260,15 +289,12 @@ Params ParseUserInputs(int argc, char** argv) {
   params.suppress_logging = result["suppress_logging"].as<bool>();
   params.profiling = result["profiling"].as<bool>();
 
-  // Check parameter inputs
-  if (params.suppress_logging) {
-    spdlog::set_level(spdlog::level::off);
-  }
-
   if (params.matching_mode == "id") {
     params.num_iterations = 1;
-    spdlog::info("Set num_iterations to {:d} as matching mode \"{}\" was selected.",
-                 params.num_iterations, params.matching_mode.c_str());
+    if (!params.suppress_logging) {
+      std::cout << fmt::format("Set num_iterations to {:d} as matching mode \"{}\" was selected.\n",
+                               params.num_iterations, params.matching_mode.c_str());
+    }
   }
 
   if (params.matching_mode != "nn" && params.matching_mode != "id") {
