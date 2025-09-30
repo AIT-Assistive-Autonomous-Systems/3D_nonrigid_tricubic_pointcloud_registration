@@ -1,10 +1,14 @@
-# 3D Non-Rigid Tricubic Point Cloud Registration
+# 3D Non-Rigid ICP
+
+![header.png](docs/header.png)
+
+TLDR: see [the tutorial](docs/tutorial/README.md) for a step-by-step guide on how to use the non-rigid ICP algorithm.
 
 ## Method
 
-This is an implementation of the method described in the paper "**Non-rigid point cloud registration using piece-wise tricubic polynomials as transformation model**".
+This is an implementation of the method described in the [paper](https://www.mdpi.com/2072-4292/15/22/5348) "**Non-rigid point cloud registration using piece-wise tricubic polynomials as transformation model**".
 
-This method can be used to register two 3D point clouds which are related by a non-rigid transformation. In other words, when a 6DoF rigid-body transformation (rotation and translation) is insufficient to align the two point clouds, this method might be a suitable alternative.
+This method can be used to register two 3D point clouds which are related by a non-rigid transformation. In other words, when a 6 degree-of-freedom rigid-body transformation (3 translation + 3 rotations) is insufficient to align the two point clouds, this method might be a suitable alternative.
 
 ## Examples
 

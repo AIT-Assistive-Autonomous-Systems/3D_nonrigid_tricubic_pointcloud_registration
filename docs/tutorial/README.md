@@ -9,7 +9,7 @@ You will need:
 - Two executables: `nonrigid-icp` and `nonrigid-icp-transform` available from the [Releases](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration/releases).
   - For Linux: use `nonrigid-icp-x86_64.AppImage` and `nonrigid-icp-transform-x86_64.AppImage`
   - For Windows: use `nonrigid-icp.exe` and `nonrigid-icp-transform.exe`
-- Sample point clouds: `original-bunny.ply` ([source](https://graphics.stanford.edu/data/3Dscanrep/)) and `deformed-bunny.ply` from the [tutorial folder](docs/tutorial/).
+- Sample point clouds: `original-bunny.ply` ([source](https://graphics.stanford.edu/data/3Dscanrep/)) and `deformed-bunny.ply` from the [tutorial folder](./).
 
 ![image1.png](image1.png)
 
@@ -26,7 +26,7 @@ The non-rigid ICP algorithm uses the point-to-plane error metric. Thus, it requi
 
 You can compute normals using tools like [CloudCompare](https://www.danielgm.net/cc/), [MeshLab](https://www.meshlab.net/), or [PDAL](https://pdal.io/).
 
-See [this PDAL pipeline example](test/test-mls-rail/pdal-pipeline.json) for filtering point clouds and computing normals.
+See [this PDAL pipeline example](../../test/test-mls-rail/pdal-pipeline.json) for filtering point clouds and computing normals.
 
 ## Computing the Non-Rigid Transformation
 
