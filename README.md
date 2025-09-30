@@ -31,7 +31,7 @@ Two command line executables are provided:
 - `nonrigid-icp`: Estimates the non-rigid transformation between two point clouds
 - `nonrigid-icp-transform`: Applies the estimated non-rigid transformation to a point cloud
 
-Builds are provided for Linux and Windows, see [Releases](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration/releases).
+Builds are provided for Linux and Windows, see [Releases](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/releases).
 
 These are the help messages of the two executables:
 
@@ -121,7 +121,7 @@ The paper can be found at [https://www.mdpi.com/2072-4292/15/22/5348](https://ww
 
 ## 2D Prototype
 
-A prototype implementation of this algorithm for 2D point clouds written in Matlab can be found [here](https://github.com/AIT-Assistive-Autonomous-Systems/2D_nonrigid_tricubic_pointcloud_registration).
+A prototype implementation of this algorithm for 2D point clouds written in Matlab can be found [here](https://github.com/AIT-Assistive-Autonomous-Systems/2D_nonrigid_ICP).
 
 ## Build
 
@@ -143,4 +143,4 @@ Look into the [.github/workflows/build-windows.yml](.github/workflows/build-wind
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration&type=Date)](https://www.star-history.com/#AIT-Assistive-Autonomous``-Systems/3D_nonrigid_tricubic_pointcloud_registration&Date)``
+[![Star History Chart](https://api.star-history.com/svg?repos=AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP&type=Date)](https://www.star-history.com/#AIT-Assistive-Autonomous``-Systems/3D_nonrigid_ICP&Date)``

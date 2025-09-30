@@ -1,5 +1,5 @@
 {
-  "name": "3D_nonrigid_tricubic_pointcloud_registration",
+  "name": "3D_nonrigid_ICP",
   "build": {
     "dockerfile": "Dockerfile"
   },

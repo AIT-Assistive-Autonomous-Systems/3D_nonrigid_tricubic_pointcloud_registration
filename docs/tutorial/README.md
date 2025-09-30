@@ -6,7 +6,7 @@ This tutorial demonstrates how to register two point clouds using the non-rigid 
 
 You will need:
 
-- Two executables: `nonrigid-icp` and `nonrigid-icp-transform` available from the [Releases](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration/releases).
+- Two executables: `nonrigid-icp` and `nonrigid-icp-transform` available from the [Releases](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/releases).
   - For Linux: use `nonrigid-icp-x86_64.AppImage` and `nonrigid-icp-transform-x86_64.AppImage`
   - For Windows: use `nonrigid-icp.exe` and `nonrigid-icp-transform.exe`
 - Sample point clouds: `original-bunny.ply` ([source](https://graphics.stanford.edu/data/3Dscanrep/)) and `deformed-bunny.ply` from the [tutorial folder](./).
@@ -88,8 +88,8 @@ nonrigid-icp-transform-x86_64.AppImage \
 
 ## Issues?
 
-Feel free to open an [issue](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_tricubic_pointcloud_registration/issues) if you encounter any problems.
+Feel free to open an [issue](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/issues) if you encounter any problems.
 
 ## Additional Examples
 
-Find more examples in the [test folder](test/).
+Find more examples in the [test folder](../../test/).
