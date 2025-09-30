@@ -9,3 +9,12 @@ test/test-eagle/results/
 test/test-mls-rail/*_preprocessed.*
 test/test-nordbahn/results/
 .devcontainer/vcpkg.json
+docs/tutorial/polyscope-screenshots
+docs/tutorial/preprocessing
+docs/tutorial/aligned-bunny-id.ply
+docs/tutorial/aligned-bunny-nn.ply
+docs/tutorial/imgui.ini
+docs/tutorial/transform-grid-id.nricp
+docs/tutorial/transform-grid-nn.nricp
+docs/tutorial/visualize-ply-files.py
+docs/tutorial/.polyscope.ini
