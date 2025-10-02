@@ -8,7 +8,7 @@
 
 ![header.png](docs/header.png)
 
-TLDR: see [the tutorial](docs/tutorial/README.md) for a step-by-step guide on how to use the non-rigid ICP algorithm.
+TLDR: see [the tutorial](docs/tutorial/) for a step-by-step guide on how to use the non-rigid ICP algorithm.
 
 ## Method
 
