@@ -1,5 +1,11 @@
 # 3D Non-Rigid ICP
 
+[![Build on Windows](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/actions/workflows/build-windows.yml/badge.svg)](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/actions/workflows/build-windows.yml)
+[![Build on Linux](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/actions/workflows/build-linux.yml/badge.svg)](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/actions/workflows/build-linux.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP)](https://github.com/AIT-Assistive-Autonomous-Systems/3D_nonrigid_ICP/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![DOI](https://img.shields.io/badge/DOI-10.3390%2Frs15225348-blue)](https://doi.org/10.3390/rs15225348)
+
 ![header.png](docs/header.png)
 
 TLDR: see [the tutorial](docs/tutorial/README.md) for a step-by-step guide on how to use the non-rigid ICP algorithm.
